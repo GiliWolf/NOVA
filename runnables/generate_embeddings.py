@@ -24,7 +24,7 @@ def generate_embeddings_with_model(outputs_folder_path:str, config_path_data:str
     model = NOVAModel.load_from_checkpoint(chkp_path)
 
     embeddings, labels, paths = generate_embeddings(model, config_data, batch_size=batch_size)
-    #outputs_folder_path = f"{working_dir}/NOVA_rotation/embeddings/embedding_output/RotationDatasetConfig_New_paths"
+    outputs_folder_path = f"{working_dir}/NOVA_rotation/embeddings/embedding_output/{os.path.basename(config_path_data)}"
     save_embeddings(embeddings, labels, paths, config_data, outputs_folder_path)
 
 if __name__ == "__main__":

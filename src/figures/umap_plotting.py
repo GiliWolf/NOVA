@@ -20,7 +20,7 @@ import matplotlib.colors as mcolors
 
 import matplotlib
 from matplotlib import font_manager as fm
-
+FONT_PATH = "/home/projects/hornsteinlab/sagyk/anaconda3/envs/nova/fonts/arial.ttf"
 fm.fontManager.addfont(FONT_PATH)
 matplotlib.rcParams['font.family'] = 'Arial'
 
