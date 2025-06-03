@@ -104,7 +104,7 @@ def filter_paths_by_substrings(paths: List[Path], substrings: List[str], part_in
         )
     ]
 
-def load_config_file(path:string, custom_filename:string=None, savefolder:string=None):
+def load_config_file(path:string, custom_filename:string=None, savefolder:string=None, args = None):
     """Load config file (and save it to file for documentation)
 
     Args:
@@ -115,7 +115,10 @@ def load_config_file(path:string, custom_filename:string=None, savefolder:string
         BaseConfig: Instance of the loaded config class
     """
     config_class = get_class(path)
-    config = config_class()
+    if args is not None:
+        config = config_class(args)
+    else:
+        config = config_class()
     
     if savefolder is None or savefolder.strip == "":
         savefolder = config.CONFIGS_USED_FOLDER
