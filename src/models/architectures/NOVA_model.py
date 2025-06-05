@@ -1,3 +1,5 @@
+
+
 import os
 import sys
 import logging
@@ -100,43 +102,7 @@ class NOVAModel():
         
         return all_outputs, all_labels, all_paths
     
-    def infer_with_paths(self, data_loader: DataLoader)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
-        """Run inference on the data_loader data
-
-        Args:
-            data_loader (DataLoader): The dataloader to run inference on
-
-        Returns:
-            Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]: (all the outputs, all the labels)
-        """
-        all_outputs:List[torch.Tensor] = []
-        all_labels:np.ndarray[str] = np.array([])
-        all_paths:np.ndarray[str] = np.array([])
-        
-        # Move model to cuda
-        self.model = self.model.cuda()
-        
-        # Set model to eval mode
-        self.model.eval()
-        
-        with torch.no_grad():
-            for it, res in enumerate(data_loader): #it: index, res: batch (X, y, path)
-                logging.info(f"[Inference] Batch number: {it}/{len(data_loader)}")
-                X, y, path = res
-                X = X.cuda()
-                
-                # convert from indexes to the labels
-                labels = data_loader.dataset.id2label(y)
-                # run the model to get the embeddings
-                outputs = self.model(X).cpu() #[B, embeded_dim] (return the embeded vector of the cls_token for each image)
-                
-                all_outputs.append(outputs)
-                all_labels = np.append(all_labels, labels)
-                all_paths = np.append(all_paths, path)
-        
-        all_outputs:np.ndarray[torch.Tensor] = np.vstack(all_outputs) # concanate all output  - [num_of_samples, embed_dim]
-        
-        return all_outputs, all_labels, all_paths
+  
     
     def gen_attn_maps(self, data_loader: DataLoader)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
         """ same as  - self.Infer(), but calls self.model.get_all_selfattention(X) instead of self.model(X)
@@ -178,6 +144,49 @@ class NOVAModel():
         
         return all_outputs, all_labels, all_paths
 
+    def gen_attribut_maps(self, data_loader: DataLoader)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
+        """ 
+
+        Args:
+            data_loader (DataLoader): The dataloader to run inference on
+
+        Returns:
+            Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]: (all the outputs, all the labels)
+        """
+        all_outputs:List[torch.Tensor] = []
+        all_labels:np.ndarray[str] = np.array([])
+        all_paths:np.ndarray[str] = np.array([])
+        # Move model to cuda
+        self.model = self.model.cuda()
+        
+        # Set model to eval mode
+        self.model.eval()
+        
+        with torch.no_grad():
+            for it, res in enumerate(data_loader): #it: index, res: batch (X, y, path)
+                logging.info(f"[Inference] Batch number: {it}/{len(data_loader)}")
+                X, y, path = res
+                X = X.cuda()
+                
+                # convert from indexes to the labels
+                labels = data_loader.dataset.id2label(y)
+
+                # initiate attribution class
+                # run the model to get the embeddings
+                outputs = self.model.get_all_selfattention(X).cpu() # (num_layers, num_samples, num_heads, num_patches, num_patches)
+                outputs = outputs.permute(1, 0, 2, 3, 4) # (num_samples, num_layers, num_heads, num_patches, num_patches)
+                all_outputs.append(outputs)
+
+                all_labels = np.append(all_labels, labels) # (num_samples)
+
+                all_paths = np.append(all_paths, path)
+        
+        all_outputs:np.ndarray[torch.Tensor] = np.vstack(all_outputs) # concanate all output  - [num_of_samples, output_dim]
+        
+        return all_outputs, all_labels, all_paths
+
+    def get_model(self):
+        return self.model
 
     def is_equal_architecture(self, other_state_dict: Dict)->bool:
         """Check if the given state_dict is equal to self state_dict
