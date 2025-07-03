@@ -27,3 +27,5 @@ class BasePlotCorrConfig(PlotCorrConfig):
         self.PLOT_CORR_SEPERATE_MARKERS:bool = True
 
         self.PLOT_CORR_ALL_MARKERS:bool = True
+
+        self.PLOT_CORR_PER_LAYER:bool = True

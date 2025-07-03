@@ -14,7 +14,7 @@ class BaseAttnConfig(AttnConfig):
 
         self.FILTER_BY_PAIRS = True
         # attention method 
-        self.ATTN_METHOD:str = "rollout" #["rollout","all_layers"]
+        self.ATTN_METHOD:str = "all_layers" #["rollout","all_layers"]
 
         self.RESAMPLE_METHOD:int = Image.BICUBIC 
 

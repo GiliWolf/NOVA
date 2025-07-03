@@ -247,24 +247,38 @@ def __process_attn_map(attn, min_attn_threshold=None):
 
 def __resize_attn_map(processed_attn, patch_dim, img_shape, resample_method=Image.BICUBIC):
     """
-    Resize flattened attention map to original image shape:
-        (1) Reshape to (patch_dim, patch_dim)
-        (2) Resample to image shape (interpolate)
+    Resize attention map(s) to the original image shape (H, W).
+
+    Supports:
+    - A single attention map: shape (patch_dim * patch_dim,)
+    - Multiple attention maps: shape (num_layers, patch_dim * patch_dim)
 
     Parameters:
-        processed_attn: float32 vector of shape (patch_dim * patch_dim,), scaled to [0,1]
-        patch_dim: int, dimension of square patch grid
-        img_shape: (H, W) tuple of the original image
-        resample_method: PIL.Image resampling method (default: Image.BICUBIC)
+        processed_attn: np.ndarray, shape (num_patches,) or (num_layers, num_patches)
+        patch_dim: int, e.g., 14 for 14x14 patch grid
+        img_shape: tuple (H, W)
+        resample_method: PIL.Image resampling method
 
     Returns:
-        attn_resized: float32 attention map of shape (H, W), scaled to [0,1]
+        np.ndarray of shape (H, W) or (num_layers, H, W), scaled to [0, 1]
     """
-    attn_square = processed_attn.reshape(patch_dim, patch_dim)
-    attn_image = Image.fromarray((attn_square * 255).astype(np.uint8))
-    attn_resized = attn_image.resize(img_shape[::-1], resample=resample_method)  # PIL uses (W, H)
-    attn_resized = np.array(attn_resized).astype(np.float32) / 255.0
-    return attn_resized
+    H, W = img_shape
+
+    def resize_single(attn_1d):
+        attn_2d = attn_1d.reshape(patch_dim, patch_dim)
+        attn_img = Image.fromarray((attn_2d * 255).astype(np.uint8))
+        attn_resized = attn_img.resize((W, H), resample=resample_method)
+        return np.array(attn_resized).astype(np.float32) / 255.0
+
+    if processed_attn.ndim == 1:
+        return resize_single(processed_attn)  # (H, W)
+    
+    elif processed_attn.ndim == 2:
+        return np.stack([resize_single(layer) for layer in processed_attn])  # (num_layers, H, W)
+
+    else:
+        raise ValueError(f"Unsupported shape {processed_attn.shape}. Expected (N,) or (L, N).")
+
 
 
 def __color_heatmap_attn_map(processed_attn, patch_dim, img_shape, heatmap_color=cv2.COLORMAP_JET, resample_method=Image.BICUBIC):

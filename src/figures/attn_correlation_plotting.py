@@ -13,19 +13,35 @@ from src.datasets.dataset_config import DatasetConfig
 from src.figures.plot_correlation_config import PlotCorrConfig
 from src.datasets.label_utils import get_unique_parts_from_labels, get_markers_from_labels, get_batches_from_labels
 
+def get_percentiles(data, prc_list = [25,50,75], axis=0):
+    perc_tuple = ()
+    for prc in prc_list:
+        res = np.percentile(data, prc, axis=axis)
+        perc_tuple += (res,)
+    return perc_tuple
+
+def get_corr_percentiles(data, num_channels):
+            p25s, medians, p75s = [], [], []
+            for ch in range(num_channels):
+                p25, med, p75 = get_percentiles(data[:, :, ch], prc_list=[25, 50, 75])
+                p25s.append(p25)
+                medians.append(med)
+                p75s.append(p75)
+            return p25s, medians, p75s
+
 def plot_correlation(corr_data, corr_method, config_plot, channel_names=None,
                      sup_title="Correlation", output_folder_path=None, per_layer=False):
 
-    # Step 1: Normalize shape to (N, C, L)
+    # Step 1: Normalize shape to (N, L, C)
     if corr_data.ndim == 2:
-        corr_data = corr_data[:, :, np.newaxis]  # shape (N, C, 1)
+        corr_data = corr_data[:, np.newaxis, :]  # shape (N, 1, C)
         only_one_layer = True
     elif corr_data.ndim == 3:
         only_one_layer = False
     else:
         raise ValueError(f"Unsupported shape for corr_data: {corr_data.shape}")
 
-    num_samples, num_channels, num_layers = corr_data.shape
+    num_samples, num_layers, num_channels = corr_data.shape
 
     # Step 2: Channel names
     if channel_names is None:
@@ -34,16 +50,8 @@ def plot_correlation(corr_data, corr_method, config_plot, channel_names=None,
 
     if per_layer:
         # ─── Line + shaded percentile plot across layers ───
-        def get_corr_percentiles(data):
-            p25s, medians, p75s = [], [], []
-            for ch in range(num_channels):
-                p25, med, p75 = get_percentiles(data[:, ch, :], prc_list=[25, 50, 75])
-                p25s.append(p25)
-                medians.append(med)
-                p75s.append(p75)
-            return p25s, medians, p75s
 
-        p25s_corr, medians_corr, p75s_corr = get_corr_percentiles(corr_data)
+        p25s_corr, medians_corr, p75s_corr = get_corr_percentiles(corr_data, num_channels)
         layers_range = np.arange(num_layers)
 
         fig, ax = plt.subplots(figsize=(1.5 * num_layers, 6))
@@ -64,7 +72,7 @@ def plot_correlation(corr_data, corr_method, config_plot, channel_names=None,
         ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
 
         for ch in range(num_channels):
-            values = corr_data[:, ch, :].flatten()
+            values = corr_data[:, :, ch].flatten()
             ax.boxplot(values,
                        positions=[ch + 1],
                        widths=0.6,
@@ -115,9 +123,9 @@ def plot_correlation_by_markers(corr_by_markers, corr_method, config_plot, chann
     marker_names = list(corr_by_markers.keys())
     sample = np.array(next(iter(corr_by_markers.values())))
 
-    # Normalize shape: (N, C) → (N, C, 1)
+    # Normalize shape: (N, C) → (N, 1, C)
     if sample.ndim == 2:
-        corr_by_markers = {k: v[:, :, np.newaxis] for k, v in corr_by_markers.items()}
+        corr_by_markers = {k: v[:,  np.newaxis, :] for k, v in corr_by_markers.items()}
         is_rollout = True
     elif sample.ndim == 3:
         is_rollout = False
@@ -126,48 +134,60 @@ def plot_correlation_by_markers(corr_by_markers, corr_method, config_plot, chann
 
     sample = np.array(next(iter(corr_by_markers.values())))
     num_markers = len(marker_names)
-    num_channels = sample.shape[1]
-    num_layers = sample.shape[2]
+    num_samples, num_layers, num_channels = sample.shape
+   
 
     if channel_names is None:
         channel_names = [f"Ch{i}" for i in range(num_channels)]
     assert len(channel_names) == num_channels
 
-    # Plot setup
     if per_layer:
-        fig_width = 1.5 * num_markers * num_channels * num_layers
+        # ─── Line + shaded plot per marker ────────────────
+        ncols = len(marker_names)
+        fig, axes = plt.subplots(1, ncols, figsize=(6 * ncols, 6), sharey=True)
+
+        if ncols == 1:
+            axes = [axes]
+
+        for ax, marker in zip(axes, marker_names):
+            data = corr_by_markers[marker]  # shape: (N, L, C)
+            p25s_corr, medians_corr, p75s_corr = get_corr_percentiles(data, num_channels)
+            layers_range = np.arange(num_layers)
+
+            for ch in range(num_channels):
+                ax.plot(layers_range, medians_corr[ch], label=f"{channel_names[ch]} (Median)",
+                        marker='o', color=f"C{ch}")
+                ax.fill_between(layers_range, p25s_corr[ch], p75s_corr[ch],
+                                alpha=0.3, color=f"C{ch}")
+
+            ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+            ax.set_title(marker, fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+            ax.set_xlabel("Layer Number", fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+            ax.set_xticks(layers_range)
+            ax.grid(axis='y', linestyle='--', alpha=0.5)
+
+        axes[0].set_ylabel(f"{corr_method} Correlation", fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+        axes[-1].legend(loc="upper right")
+        fig.suptitle(sup_title, fontsize=config_plot.PLOT_SUPTITLE_FONTSIZE)
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
     else:
-        fig_width = 1.5 * num_markers * num_channels
-    fig, ax = plt.subplots(figsize=(fig_width, 6))
+        # ─── Boxplot per (marker, channel) ────────────────
+        fig_width = 1.5 * num_channels * len(marker_names)
+        fig, ax = plt.subplots(figsize=(fig_width, 6))
 
-    box_width = 0.6
-    intra_gap = 1.0   # spacing between channels
-    layer_gap = 0.5   # spacing between layers within a channel
-    inter_gap = 2.5   # spacing between markers
+        box_width = 0.6
+        intra_gap = 1.0
+        inter_gap = 2.5
 
-    xtick_positions = []
-    xtick_labels = []
-    current_pos = 1
+        xtick_positions = []
+        xtick_labels = []
+        current_pos = 1
 
-    for marker in marker_names:
-        data = corr_by_markers[marker]  # shape (N, C, L)
-        for ch in range(num_channels):
-            if per_layer:
-                for l in range(num_layers):
-                    values = data[:, ch, l]
-                    ax.boxplot(values,
-                               positions=[current_pos],
-                               widths=box_width,
-                               patch_artist=True,
-                               boxprops=dict(facecolor=f"C{ch}", color='black'),
-                               medianprops=dict(color='black'),
-                               showfliers=False)
-                    xtick_positions.append(current_pos)
-                    xtick_labels.append(f"{marker}\n{channel_names[ch]}\nL{l}")
-                    current_pos += layer_gap
-                current_pos += intra_gap  # extra gap between channels
-            else:
-                values = data[:, ch, :].flatten()
+        for marker in marker_names:
+            data = corr_by_markers[marker]  # shape: (N, L, C)
+            for ch in range(num_channels):
+                values = data[:, :, ch].flatten()
                 ax.boxplot(values,
                            positions=[current_pos],
                            widths=box_width,
@@ -178,20 +198,18 @@ def plot_correlation_by_markers(corr_by_markers, corr_method, config_plot, chann
                 xtick_positions.append(current_pos)
                 xtick_labels.append(f"{marker}\n{channel_names[ch]}")
                 current_pos += intra_gap
-        current_pos += inter_gap  # extra gap between markers
+            current_pos += inter_gap
 
-    # Formatting
-    ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
-    ax.set_xticks(xtick_positions)
-    ax.set_xticklabels(xtick_labels, rotation=45, ha='right', fontsize=10)
-    ax.set_ylabel(f"{corr_method} Correlation", fontsize=12)
-    ax.set_ylim(-1, 1)
-    ax.grid(axis='y', linestyle='--', alpha=0.5)
-    fig.suptitle(sup_title, fontsize=config_plot.PLOT_SUPTITLE_FONTSIZE)
+        ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+        ax.set_xticks(xtick_positions)
+        ax.set_xticklabels(xtick_labels, rotation=45, ha='right', fontsize=10)
+        ax.set_ylabel(f"{corr_method} Correlation", fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+        ax.set_ylim(-1, 1)
+        ax.grid(axis='y', linestyle='--', alpha=0.5)
+        fig.suptitle(sup_title, fontsize=config_plot.PLOT_SUPTITLE_FONTSIZE)
+        plt.tight_layout()
 
-    plt.tight_layout()
-
-    # Save or show
+    # ─── Save or show ─────────────
     if config_plot.SAVE_PLOT and output_folder_path is not None:
         fig_name = sup_title.split('\n', 1)[0]
         plt.savefig(os.path.join(output_folder_path, f"{fig_name}.png"),
@@ -199,7 +217,6 @@ def plot_correlation_by_markers(corr_by_markers, corr_method, config_plot, chann
         plt.close()
     else:
         plt.show()
-
 
 def plot_corr_data(corr_data:List[np.ndarray[torch.Tensor]], labels:List[np.ndarray[torch.Tensor]], 
                     data_config:DatasetConfig, config_plot:PlotCorrConfig, corr_method:str, 
