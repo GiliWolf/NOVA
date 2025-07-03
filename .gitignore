@@ -1,4 +1,5 @@
 # Visual Code
+
 .history/
 .vscode/
 .ipynb_checkpoints/
@@ -8,6 +9,7 @@
 anaconda3/
 logs/
 
+outputs/vit_models/*
 restored_data/
 id_rsa
 id_rsa.pub
