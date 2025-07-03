@@ -173,7 +173,6 @@ def process_attn_maps(attn_maps: np.ndarray[float], labels: np.ndarray[str],
         logging.info(f'[process_attn_maps]: for set {set_type}, starting proceesing {len(cur_labels)} samples.')
         
         set_attn_maps = []
-        set_corr_data = []
         for batch, batch_indexes in __dict_temp.items():
             #extract current batch samples
             batch_attn_maps = cur_attn_maps[batch_indexes]

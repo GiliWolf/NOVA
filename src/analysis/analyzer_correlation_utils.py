@@ -2,37 +2,20 @@
 import os
 import sys
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-import cv2
-from PIL import Image
 sys.path.insert(0, os.getenv("HOME"))
 sys.path.insert(1, os.getenv("NOVA_HOME"))
-
-
 import logging
-from src.models.architectures.NOVA_model import NOVAModel
-from src.embeddings.embeddings_utils import load_embeddings
-from src.common.utils import load_config_file
 from src.datasets.dataset_config import DatasetConfig
-from src.figures.plot_config import PlotConfig
-from src.models.utils.consts import CHECKPOINT_BEST_FILENAME, CHECKPOINTS_FOLDERNAME
 from typing import Dict, List, Optional, Tuple, Callable
 from copy import deepcopy
 import numpy as np
 import torch
-from src.common.utils import get_if_exists
-from src.datasets.data_loader import get_dataloader
-from src.datasets.dataset_NOVA import DatasetNOVA
 from src.datasets.label_utils import get_batches_from_labels, get_unique_parts_from_labels, get_markers_from_labels,\
     edit_labels_by_config, get_batches_from_input_folders, get_reps_from_labels, get_conditions_from_labels, get_cell_lines_from_labels
-from torch.utils.data import DataLoader
 from collections import OrderedDict
-from matplotlib import gridspec
-from NOVA_rotation.load_files.load_data_from_npy import parse_paths, load_tile, load_paths_from_npy, Parse_Path_Item
-from NOVA_rotation.attention_maps.attention_maps_utils.attn_corr_utils import *
-from NOVA_rotation.Configs.subset_config import SubsetConfig
-from NOVA_rotation.Configs.attn_config import AttnConfig
-from NOVA_rotation.Configs.plot_attn_map_config import PlotAttnMapConfig
+from NOVA.tools.load_data_from_npy import parse_paths, load_tile, load_paths_from_npy, Parse_Path_Item
+
+
 
 def corr_pearsonr(m1, m2):
     """
@@ -188,7 +171,7 @@ def parse_corr_data_list(corr_data):
         return corr_data_reshaped
 
 
-
+###########################
 def plot_correlation_rollout(corr_data, corr_method, config_plot, channel_names=None,  sup_title = "Rollout_Correlation_Entropy", output_folder_path=None):
     """
     Plots correlation and entropy boxplots from corr_data.
