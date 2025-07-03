@@ -163,7 +163,8 @@ def process_attn_maps(attn_maps: np.ndarray[float], labels: np.ndarray[str],
         data_set_types = ['testset']
     
     all_attn_maps = []
-    all_corr_data = []
+
+    img_shape = data_config.IMAGE_SIZE # suppose to be square (100, 100)
     for i, set_type in enumerate(data_set_types):
         cur_attn_maps, cur_labels = attn_maps[i], labels[i]
         batch_of_label = get_batches_from_labels(cur_labels, data_config)
@@ -179,6 +180,9 @@ def process_attn_maps(attn_maps: np.ndarray[float], labels: np.ndarray[str],
 
             for index, (sample_attn) in enumerate(batch_attn_maps):
                 processed_attn_map =  globals()[f"_process_attn_map_{config_attn.ATTN_METHOD}"](sample_attn, config_attn)
+                num_patches = processed_attn_map.shape[-1]
+                patch_dim = int(np.sqrt(num_patches))
+                processed_attn_map =__resize_attn_map(processed_attn_map, patch_dim, img_shape, resample_method=config_attn.RESAMPLE_METHOD)
                 set_attn_maps.append(processed_attn_map)
         
         # end of set type
