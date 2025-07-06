@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from src.datasets.dataset_config import DatasetConfig
 
 
 def load_labels_from_npy(embd_dir, set_type):
@@ -174,6 +175,59 @@ def display_tile(Site:str, tile:int, marker:np.array, nucleus:np.array, overlay:
         plt.close(fig)
     else:
         plt.show()
+
+def __extract_indices_to_plot(keep_samples_dirs: list[str], paths: np.ndarray, data_config: DatasetConfig):
+    """
+    Extract indices to plot from a list of keep_samples_dirs.
+    For each dataset split (train/val/test or test), collects indices from all directories and concatenates them.
+
+    Parameters:
+        keep_samples_dirs: list of directories containing .npy files of sample paths
+        paths: np.ndarray of path arrays, one per dataset split
+        data_config: dataset configuration object
+
+    Returns:
+        all_samples_indices: list of lists, where each sublist contains indices for one dataset split
+    """
+    if data_config.SPLIT_DATA:
+        data_set_types = ['trainset', 'valset', 'testset']
+    else:
+        data_set_types = ['testset']
+
+    all_samples_indices = []
+
+    for i, set_type in enumerate(data_set_types):
+        cur_paths = paths[i]
+        paths_df = parse_paths(cur_paths)
+
+        # Accumulate all keep_paths from all dirs
+        combined_keep_paths = set()
+        for dir_path in keep_samples_dirs:
+            keep_paths_df = load_paths_from_npy(dir_path, set_type)
+            combined_keep_paths.update(keep_paths_df["Path"].tolist())
+
+        # Get indices of matching paths
+        samples_indices = paths_df[paths_df["Path"].isin(combined_keep_paths)].index.tolist()
+        all_samples_indices.append(samples_indices)
+
+    return all_samples_indices
+
+def __extract_samples_to_plot(sampels: np.ndarray[str], indices:list, data_config: DatasetConfig):
+    """
+    extract samples from given array using indices. 
+    """
+    if data_config.SPLIT_DATA:
+        data_set_types = ['trainset','valset','testset']
+    else:
+        data_set_types = ['testset']
+    
+    all_filtered_sampels = []
+    for i, set_type in enumerate(data_set_types):
+        curr_samples, curr_indices = sampels[i], indices[i]
+        filtered_samples = curr_samples[curr_indices]
+        all_filtered_sampels.append(filtered_samples)
+        
+    return all_filtered_sampels
 
  
 

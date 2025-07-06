@@ -43,15 +43,37 @@ class AnalyzerAttnCorr(Analyzer):
             The calculated correlation data
         """
         corr_data = compute_attn_correlations(processed_attn_maps, labels, paths, data_config = self.data_config, corr_method = self.corr_method)
+        self.features = corr_data
+        self.labels = labels
+        self.paths = paths
         return corr_data
     
-    def load(self)->None:
-        """load the saved features into the self.features attribute
+    def load(self) -> None:
+        """
+        Load the saved features, labels, and paths into the corresponding attributes.
+        Stacks data per set into arrays with shape (num_sets, ...).
         """
         output_folder_path = self.get_saving_folder(feature_type='attn_correlations')
-        logging.info(f"[save scores]: output_folder_path: {output_folder_path}")
-        loadpath = self._get_save_path(output_folder_path)
-        self.features = np.load(loadpath)
+        logging.info(f"[load scores]: output_folder_path: {output_folder_path}")
+
+        if self.data_config.SPLIT_DATA:
+            data_set_types = ['trainset', 'valset', 'testset']
+        else:
+            data_set_types = ['testset']
+
+        features = []
+        labels = []
+        paths = []
+
+        for set_type in data_set_types:
+            features.append(np.load(self._get_save_path(output_folder_path, f"{set_type}_corrs")))
+            labels.append(np.load(self._get_save_path(output_folder_path, f"{set_type}_labels")))
+            paths.append(np.load(self._get_save_path(output_folder_path, f"{set_type}_paths")))
+
+        self.features = features
+        self.labels = labels
+        self.paths = paths
+
         return None
 
     def save(self)->None:
@@ -60,9 +82,18 @@ class AnalyzerAttnCorr(Analyzer):
         """
         output_folder_path = self.get_saving_folder(feature_type='attn_correlations')
         os.makedirs(output_folder_path, exist_ok=True)
-        savepath = self._get_save_path(output_folder_path)
-        logging.info(f"Saving scores to {savepath}")
-        np.save(savepath, self.features)
+        logging.info(f"Saving scores to {output_folder_path}")
+
+        if self.data_config.SPLIT_DATA:
+            data_set_types = ['trainset','valset','testset']
+        else:
+            data_set_types = ['testset']
+        
+        for i, set_type in enumerate(data_set_types):
+            np.save(self._get_save_path(output_folder_path, f"{set_type}_corrs"), self.features[i])
+            np.save(self._get_save_path(output_folder_path, f"{set_type}_labels"), self.labels[i])
+            np.save(self._get_save_path(output_folder_path, f"{set_type}_paths"), self.paths[i])
+        
         return None
 
     @abstractmethod    
@@ -79,10 +110,12 @@ class AnalyzerAttnCorr(Analyzer):
             str: Name of the score metric.
         """
         pass
+    
+    
 
-    def _get_save_path(self, output_folder_path:str)->str: #TODO:ask sagy where to save
+    def _get_save_path(self, output_folder_path:str, file_type:str)->str: #TODO:ask sagy where to save
         
-        savepath = os.path.join(output_folder_path, "corrs.npy")
+        savepath = os.path.join(output_folder_path, f"{file_type}.npy")
         return savepath
 
     

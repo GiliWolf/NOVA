@@ -14,7 +14,7 @@ class BaseAttnConfig(AttnConfig):
 
         self.FILTER_BY_PAIRS = True
         # attention method 
-        self.ATTN_METHOD:str = "all_layers" #["rollout","all_layers"]
+        self.ATTN_METHOD:str = "rollout" #["rollout","all_layers"]
 
         self.RESAMPLE_METHOD:int = Image.BICUBIC 
 
@@ -22,5 +22,4 @@ class BaseAttnConfig(AttnConfig):
 
         self.MIN_ATTN_THRESHOLD:float = 0.0
 
-        self.CORR_METHOD:str = "pearsonr" #options: ["pearsonr", "mutual_info", "ssim", "attn_overlap", "soft_overlap"]
 

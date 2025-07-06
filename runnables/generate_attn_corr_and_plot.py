@@ -13,8 +13,9 @@ from src.figures.attn_correlation_plotting import plot_corr_data
 from src.figures.plot_correlation_config import PlotCorrConfig
 
 def load_attn_and_plot_correlation(outputs_folder_path:str, config_path_data:str, config_path_plot:str = None):
-    # TODO: deciede where to put corr_method
-    corr_method = "pearsonr"
+    # TODO: decide where to put corr_method
+    # self.CORR_METHOD:str = "soft_overlap" #options: ["pearsonr", "mutual_info", "ssim", "attn_overlap", "soft_overlap"]
+    corr_method = "soft_overlap"
 
     config_data:DatasetConfig = load_config_file(config_path_data, "data")
     config_data.OUTPUTS_FOLDER = outputs_folder_path
