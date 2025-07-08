@@ -43,7 +43,7 @@ def filter_by_labels(labels_df: pd.DataFrame,embeddings_df: pd.DataFrame,paths_d
     return filtered_labels, filtered_embeddings, filtered_paths
 
 
-def compute_distances(a1:np.array, a2:np.array, metric='euclidean'):
+def compute_pair_wise_distances(a1:np.array, a2:np.array, metric='euclidean'):
     """"Compute all pairwise distances between 2 vectors.
     parameters:
         a1: first array 
@@ -220,7 +220,7 @@ def visualize_pairs(distances, flattened_distances, labeled_pairs, metric, outpu
         plt.show()
 
 
-def compute_distances(embeddings:np.ndarray[float], labels:np.ndarray[str], paths: np.ndarray[str], metric):
+def compute_distances(embeddings:np.ndarray[float], labels:np.ndarray[str], paths: np.ndarray[str], metric:str, data_config):
                 """
                 extract subset of samples from marker_embeddings by -
                     1) computing all pair-wise distances
@@ -234,15 +234,15 @@ def compute_distances(embeddings:np.ndarray[float], labels:np.ndarray[str], path
                 assert len(unique_conditions) == 2, "[analyzer pairwise dist]: should only have 2 unique conditions!"
                 c1_indices = np.where(grouped_labels_by_conditions == unique_conditions[0])[0]
                 c2_indices = np.where(grouped_labels_by_conditions == unique_conditions[1])[0]
-                filtered_labels_c1, filtered_embeddings_c1, filtered_paths_c1 = labels[c1_indices], embedding[c1_indices], paths[c1_indices]
-                filtered_labels_c2, filtered_embeddings_c2, filtered_paths_c2 = labels[c2_indices], embedding[c2_indices], paths[c2_indices]
+                filtered_labels_c1, filtered_embeddings_c1, filtered_paths_c1 = labels[c1_indices], embeddings[c1_indices], paths[c1_indices]
+                filtered_labels_c2, filtered_embeddings_c2, filtered_paths_c2 = labels[c2_indices], embeddings[c2_indices], paths[c2_indices]
                                 
                 # Compute all pairwise distances between condition 1 and 2
-                distances = compute_distances(filtered_embeddings_c1, filtered_embeddings_c2, metric)
+                distances = compute_pair_wise_distances(filtered_embeddings_c1, filtered_embeddings_c2, metric)
                 
                 return distances, unique_conditions, filtered_paths_c1, filtered_paths_c2
 
-def extract_pairs(distances, unique_conditions, paths_c1, paths_c2, config, output_dir):
+def extract_pairs(distances, unique_conditions, paths_c1, paths_c2, config):
                 flattened_distances = distances.flatten()
                 num_samples_c1, num_samples_c2 = distances.shape
                 # extract pairs
@@ -271,8 +271,6 @@ def extract_pairs(distances, unique_conditions, paths_c1, paths_c2, config, outp
                             f"path_{unique_conditions[1]}": paths_c2[j]
                         })
                 distances_df = pd.DataFrame(distances_data)
-                distances_df.to_csv(os.path.join(output_dir, f"{metric}_distances.csv"), index=False)
-
                 return distances_df
 
 

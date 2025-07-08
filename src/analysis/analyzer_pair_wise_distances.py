@@ -34,42 +34,89 @@ class AnalyzerPairwiseDistances(Analyzer):
         self.pairwise_config = pairwise_config
 
 
-    def calculate(self, embeddings:np.ndarray[float], labels:np.ndarray[str], paths: np.ndarray[str])->List[np.ndarray[torch.Tensor]]:
-        """Calculate features from given embeddings, save in the self.features attribute and return them as well
+    def calculate(self, embeddings: np.ndarray, labels: np.ndarray, paths: np.ndarray) -> Dict[str, np.ndarray]:
+        """Calculate features from given embeddings, save in the self.features attribute and return them.
 
         Args:
-            embeddings (np.ndarray[float]): embedding vector for each sample
-            labels (np.ndarray[str]): The corresponding labels of embeddings
-            paths (np.ndarray[str]): The corresponding paths of embeddings
-        Return:
-            The calculated correlation data
-        """
-        raw_distances = {}
-        pairs_df = {}
-        marker_names = get_unique_parts_from_labels(labels, get_markers_from_labels, self.pairwise_config)
-        for marker in marker_names:
-                # filter by markers
-                marker_labels, marker_embeddings, marker_paths = filter_by_labels(batch_labels, batch_embeddings, batch_paths, {"markers": marker})
-                marker_distances, unique_conditions, filtered_paths_c1, filtered_paths_c2 = compute_distances(marker_embeddings, marker_labels, marker_paths, self.pairwise_config.metric)
-                raw_distances[marker] = marker_distances
+            embeddings (np.ndarray): embedding vector for each sample
+            labels (np.ndarray): The corresponding labels of embeddings
+            paths (np.ndarray): The corresponding paths of embeddings
 
-                distances_df = extract_pairs(distances, paths_c1, paths_c2, config, output_dir)
-                pairs_df[marker] = distances_df
-        
+        Returns:
+            Dict[str, np.ndarray]: Dictionary mapping marker name to raw pairwise distances.
+        """
+        self.raw_distances: Dict[str, np.ndarray] = {}
+        self.c1_paths: Dict[str, np.ndarray] = {}
+        self.c2_paths: Dict[str, np.ndarray] = {}
+        self.pairs_df: Dict[str, pd.DataFrame] = {}
+
+        #marker_names = get_unique_parts_from_labels(labels, get_markers_from_labels, self.pairwise_config)
+        grouped_labels_by_markers = get_markers_from_labels(labels, self.data_config)
+        self.marker_names = np.unique(grouped_labels_by_markers)
+        for marker in self.marker_names:
+            # Filter by marker
+            mask = grouped_labels_by_markers == marker
+            marker_labels = labels[mask]
+            marker_embeddings = embeddings[mask]
+            marker_paths = paths[mask]
+
+            # Compute distances
+            marker_distances, unique_conditions, paths_c1, paths_c2 = compute_distances(
+                marker_embeddings, marker_labels, marker_paths, self.pairwise_config.METRIC, self.data_config
+            )
+            self.raw_distances[marker] = marker_distances
+            # self.c1_paths[marker] = paths_c1
+            # self.c2_paths[marker] = paths_c2
+
+            # Extract subset DataFrame
+            distances_df = extract_pairs(
+                marker_distances, unique_conditions, paths_c1, paths_c2, self.pairwise_config
+            )
+            self.pairs_df[marker] = distances_df
+
+        return self.pairs_df
+
     def load(self) -> None:
         """
-        Load the saved features, labels, and paths into the corresponding attributes.
-        Stacks data per set into arrays with shape (num_sets, ...).
+        Load the saved features (raw_distances and pairs_df) from disk into the corresponding attributes.
+        Stacks data per set into dictionaries indexed by marker names.
         """
 
+        output_folder_path = self.get_saving_folder(feature_type='pairwise_distances', main_folder='figures')
+        self.raw_distances = {}
+        self.pairs_df = {}
 
+        logging.info(f"Loading scores from {output_folder_path}")
+
+        for marker in self.marker_names:
+            raw_dist_path = os.path.join(output_folder_path, f"{marker}_raw_distances.npy")
+            pairs_df_path = os.path.join(output_folder_path, f"{marker}_pairs.csv")
+
+            if os.path.exists(raw_dist_path):
+                self.raw_distances[marker] = np.load(raw_dist_path)
+            else:
+                logging.warning(f"Missing file: {raw_dist_path}")
+
+            if os.path.exists(pairs_df_path):
+                self.pairs_df[marker] = pd.read_csv(pairs_df_path)
+            else:
+                logging.warning(f"Missing file: {pairs_df_path}")
+        
         return None
+
 
     def save(self)->None:
         """"
         Save the calculated distances to a specified file.
         """
+        output_folder_path = self.get_saving_folder(feature_type='pairwise_distances', main_folder = 'figures')
+        os.makedirs(output_folder_path, exist_ok=True)
+        logging.info(f"Saving scores to {output_folder_path}")
 
+        for marker in self.marker_names:
+            np.save(os.path.join(output_folder_path, f"{marker}_raw_distances.npy"), self.raw_distances[marker])
+            self.pairs_df[marker].to_csv(os.path.join(output_folder_path, f"{marker}_pairs.csv"), index=False)
+        
         return None
 
     @abstractmethod    

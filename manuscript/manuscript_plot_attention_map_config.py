@@ -41,6 +41,6 @@ class BaseAttnMapPlotConfig(PlotAttnMapConfig):
 
         self.FILTER_SAMPLES_FOLDER_PATHS:list = None # list of folders which had paths files in them , which will be ised to filter the samples
 
-        self.SHOW_CORR_SCORES:bool = True
+        self.SHOW_CORR_SCORES:bool = False
 
 
