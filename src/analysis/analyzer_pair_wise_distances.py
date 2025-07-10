@@ -46,8 +46,6 @@ class AnalyzerPairwiseDistances(Analyzer):
             Dict[str, np.ndarray]: Dictionary mapping marker name to raw pairwise distances.
         """
         self.raw_distances: Dict[str, np.ndarray] = {}
-        self.c1_paths: Dict[str, np.ndarray] = {}
-        self.c2_paths: Dict[str, np.ndarray] = {}
         self.pairs_df: Dict[str, pd.DataFrame] = {}
 
         #marker_names = get_unique_parts_from_labels(labels, get_markers_from_labels, self.pairwise_config)
@@ -65,13 +63,12 @@ class AnalyzerPairwiseDistances(Analyzer):
                 marker_embeddings, marker_labels, marker_paths, self.pairwise_config.METRIC, self.data_config
             )
             self.raw_distances[marker] = marker_distances
-            # self.c1_paths[marker] = paths_c1
-            # self.c2_paths[marker] = paths_c2
 
             # Extract subset DataFrame
             distances_df = extract_pairs(
                 marker_distances, unique_conditions, paths_c1, paths_c2, self.pairwise_config
             )
+            #"pair_type","{config.METRIC}_distance,"path_{unique_conditions[0]}","path_{unique_conditions[1]}"
             self.pairs_df[marker] = distances_df
 
         return self.pairs_df
@@ -116,6 +113,11 @@ class AnalyzerPairwiseDistances(Analyzer):
         for marker in self.marker_names:
             np.save(os.path.join(output_folder_path, f"{marker}_raw_distances.npy"), self.raw_distances[marker])
             self.pairs_df[marker].to_csv(os.path.join(output_folder_path, f"{marker}_pairs.csv"), index=False)
+            
+            # save all the pairwise subset paths
+            path_columns = [col for col in self.pairs_df[marker].columns if col.startswith("path_")]
+            all_paths = self.pairs_df[marker][path_columns].values.flatten().tolist()
+            np.save(os.path.join(output_folder_path, f"{marker}_paths.npy"), all_paths)
         
         return None
 

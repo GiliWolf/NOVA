@@ -1,3 +1,5 @@
+
+
 import os
 import sys
 import logging
@@ -6,11 +8,9 @@ import torch
 from torch.utils.data import DataLoader
 from typing import Dict, List, Tuple
 from collections import OrderedDict
-import torch.nn.functional as F
 
 sys.path.insert(1, os.getenv("NOVA_HOME"))
 
-from src.common.utils import get_if_exists
 from src.models.utils.checkpoint_info import CheckpointInfo
 from src.datasets.dataset_config import DatasetConfig
 from src.models.architectures.model_config import ModelConfig
@@ -64,13 +64,11 @@ class NOVAModel():
         
         return embeddings_utils.generate_embeddings(self, dataset_config)
     
-    def infer(self, data_loader: DataLoader, return_hidden_outputs=True, normalize_outputs=True)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
+    def infer(self, data_loader: DataLoader)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
         """Run inference on the data_loader data
 
         Args:
             data_loader (DataLoader): The dataloader to run inference on
-            return_hidden_outputs (bool, optional): Whether to return the hidden outputs (i.e. before the head). Defaults to True.
-            normalize_outputs (bool, optional): Whether to normalize the outputs. Defaults to True.
 
         Returns:
             Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]: (all the outputs, all the labels)
@@ -94,16 +92,7 @@ class NOVAModel():
                 # convert from indexes to the labels
                 labels = data_loader.dataset.id2label(y)
                 # run the model to get the embeddings
-                if return_hidden_outputs:
-                    _, outputs = self.model(X, return_hidden=return_hidden_outputs) # head outputs, hidden_outputs (i.e. before head)
-                else: 
-                    outputs = self.model(X, return_hidden=return_hidden_outputs)
-
-                if normalize_outputs:
-                    # Normalize the outputs
-                    outputs = F.normalize(outputs, dim=-1)
-
-                outputs = outputs.cpu()
+                outputs = self.model(X).cpu()
                 
                 all_outputs.append(outputs)
                 all_labels = np.append(all_labels, labels)
@@ -112,7 +101,9 @@ class NOVAModel():
         all_outputs:np.ndarray[torch.Tensor] = np.vstack(all_outputs)
         
         return all_outputs, all_labels, all_paths
-
+    
+  
+    
     def gen_attn_maps(self, data_loader: DataLoader)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
         """ same as  - self.Infer(), but calls self.model.get_all_selfattention(X) instead of self.model(X)
         Run epoch on the data_loader data
@@ -152,7 +143,51 @@ class NOVAModel():
         all_outputs:np.ndarray[torch.Tensor] = np.vstack(all_outputs) # concanate all output  - [num_of_samples, output_dim]
         
         return all_outputs, all_labels, all_paths
-    
+
+    def gen_attribut_maps(self, data_loader: DataLoader)->Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]:
+        """ 
+
+        Args:
+            data_loader (DataLoader): The dataloader to run inference on
+
+        Returns:
+            Tuple[np.ndarray[torch.Tensor], np.ndarray[str]]: (all the outputs, all the labels)
+        """
+        all_outputs:List[torch.Tensor] = []
+        all_labels:np.ndarray[str] = np.array([])
+        all_paths:np.ndarray[str] = np.array([])
+        # Move model to cuda
+        self.model = self.model.cuda()
+        
+        # Set model to eval mode
+        self.model.eval()
+        
+        with torch.no_grad():
+            for it, res in enumerate(data_loader): #it: index, res: batch (X, y, path)
+                logging.info(f"[Inference] Batch number: {it}/{len(data_loader)}")
+                X, y, path = res
+                X = X.cuda()
+                
+                # convert from indexes to the labels
+                labels = data_loader.dataset.id2label(y)
+
+                # initiate attribution class
+                # run the model to get the embeddings
+                outputs = self.model.get_all_selfattention(X).cpu() # (num_layers, num_samples, num_heads, num_patches, num_patches)
+                outputs = outputs.permute(1, 0, 2, 3, 4) # (num_samples, num_layers, num_heads, num_patches, num_patches)
+                all_outputs.append(outputs)
+
+                all_labels = np.append(all_labels, labels) # (num_samples)
+
+                all_paths = np.append(all_paths, path)
+        
+        all_outputs:np.ndarray[torch.Tensor] = np.vstack(all_outputs) # concanate all output  - [num_of_samples, output_dim]
+        
+        return all_outputs, all_labels, all_paths
+
+    def get_model(self):
+        return self.model
+
     def is_equal_architecture(self, other_state_dict: Dict)->bool:
         """Check if the given state_dict is equal to self state_dict
 
@@ -183,9 +218,6 @@ class NOVAModel():
             vision_transformer.VisionTransformer: An initialized vit model
         """
         vit_version = self.model_config.VIT_VERSION
-        is_MLP_head = get_if_exists(self.model_config, 'IS_MLP_HEAD', False)
-
-        logging.info(f"Creating Vision Transformer with version: {vit_version}, MLP head: {is_MLP_head}")
         
         if vit_version == 'base':
             create_vit = vision_transformer.vit_base
@@ -200,8 +232,7 @@ class NOVAModel():
                 img_size=[self.model_config.IMAGE_SIZE],
                 patch_size=self.model_config.PATCH_SIZE,
                 in_chans=self.model_config.NUM_CHANNELS,
-                num_classes=self.model_config.OUTPUT_DIM,
-                is_MLP_head=is_MLP_head,
+                num_classes=self.model_config.OUTPUT_DIM
         )
         
         return vit

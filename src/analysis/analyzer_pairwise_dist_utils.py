@@ -231,7 +231,7 @@ def compute_distances(embeddings:np.ndarray[float], labels:np.ndarray[str], path
                 # extract data from config 
                 grouped_labels_by_conditions = get_cell_lines_conditions_from_labels(labels, data_config)
                 unique_conditions = np.unique(grouped_labels_by_conditions)
-                assert len(unique_conditions) == 2, "[analyzer pairwise dist]: should only have 2 unique conditions!"
+                assert len(unique_conditions) == 2, f"[analyzer pairwise dist]: should only have 2 unique conditions! found: {unique_conditions}"
                 c1_indices = np.where(grouped_labels_by_conditions == unique_conditions[0])[0]
                 c2_indices = np.where(grouped_labels_by_conditions == unique_conditions[1])[0]
                 filtered_labels_c1, filtered_embeddings_c1, filtered_paths_c1 = labels[c1_indices], embeddings[c1_indices], paths[c1_indices]

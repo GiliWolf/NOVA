@@ -18,6 +18,8 @@ from src.figures.attention_maps_plotting import plot_attn_maps
 from src.datasets.label_utils import get_batches_from_input_folders
 from tools.load_data_from_npy import __extract_indices_to_plot, __extract_samples_to_plot
 from src.analysis.analyzer_attention_correlation import AnalyzerAttnCorr
+from src.analysis.analyzer_pair_wise_distances import AnalyzerPairwiseDistances
+from NOVA.src.datasets.label_utils import get_unique_parts_from_labels, get_markers_from_labels
 
 
 def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, config_path_plot:str):
@@ -30,12 +32,6 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
     processed_attn_maps, labels, paths = [processed_attn_maps], [labels], [paths] #TODO: fix, needed for settypes
     
     
-    # (!) TODO: create new attn plot config (without corr) - V 
-    # (!) TODO: ceate attn_plot_utils if needed - X, in attention map plotting
-    # (!) TODO: add flag to attn_plot config if to load corr_data (only if presented, add to figure) - V
-    # (!) TODO: discard the need for config_attn in plot_attn_maps (use only plot  config) - V 
-    # (!) TODO: save attn maps in figures directory - V
-    # (!) TODO: make it work  - !!
     d = AnalyzerAttnCorr(config_data, output_folder_path, corr_method = corr_method) #TODO: decied if to instancize it - here only for the output dir
 
     # load correlation data if needed
@@ -47,20 +43,50 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
         corr_method = ""
         corr_data = None
 
-    # filter the subset if needed
-    if config_plot.FILTER_SAMPLES_FOLDER_PATHS is not None:
-            samples_indices = __extract_indices_to_plot(keep_samples_dirs=config_plot.FILTER_SAMPLES_FOLDER_PATHS, paths = paths, data_config = config_data)
-            processed_attn_maps = __extract_samples_to_plot(processed_attn_maps, samples_indices, data_config = config_data)
-            labels = __extract_samples_to_plot(labels, samples_indices, data_config = config_data)
-            paths = __extract_samples_to_plot(paths, samples_indices, data_config = config_data)
+    # filter for subsets if needed
+    if config_plot.FILTER_SAMPLES_BY_FOLDER_PATHS is not None:
+        marker_names = get_unique_parts_from_labels(labels, get_markers_from_labels)
+        pair_wise_output_folder = d.get_saving_folder(feature_type='pairwise_distances', main_folder = 'figures')
+        attn_maps_output_folder = d.get_saving_folder(feature_type="attention_maps", main_folder = 'figures')
+        for marker in marker_names:
+            keep_samples_dirs = [os.path.join(pair_wise_output_folder, f"{marker}_paths.npy")]
+            samples_indices = extract_indices(keep_samples_dirs=keep_samples_dirs, paths = paths, data_config = config_data)
+            marker_processed_attn_maps = __extract_samples_to_plot(processed_attn_maps, samples_indices, data_config = config_data)
+            marker_labels = __extract_samples_to_plot(labels, samples_indices, data_config = config_data)
+            marker_paths = __extract_samples_to_plot(paths, samples_indices, data_config = config_data)
             if corr_data is not None:
-                corr_data = __extract_samples_to_plot(corr_data, samples_indices, data_config = config_data)
-
-    # plot attn_maps (AFTER FILTERING)
+                 marker_corr_data = __extract_samples_to_plot(corr_data, samples_indices, data_config = config_data)
+            else:
+                marker_corr_data = None
+            save_path = os.path.join(attn_maps_output_folder,marker)
+            plot_attn_maps(marker_processed_attn_maps, marker_labels, marker_paths, config_data, config_plot, output_folder_path=save_path,corr_data =  marker_corr_data,corr_method = corr_method)
+    
     # TODO: keep seperation by settype?
-    plot_attn_maps(processed_attn_maps, labels, paths, config_data, config_plot, output_folder_path=d.get_saving_folder(feature_type="attention_maps"),corr_data =  corr_data,corr_method = corr_method)
+    else:
+        plot_attn_maps(processed_attn_maps, labels, paths, config_data, config_plot, output_folder_path=d.get_saving_folder(feature_type="attention_maps"),corr_data =  corr_data,corr_method = corr_method)
 
+def extract_indices(keep_samples_dirs: list[str], paths: np.ndarray, data_config: DatasetConfig):
+    if data_config.SPLIT_DATA:
+        data_set_types = ['trainset', 'valset', 'testset']
+    else:
+        data_set_types = ['testset']
 
+    all_samples_indices = []
+
+    for i, set_type in enumerate(data_set_types):
+        cur_paths = paths[i]  # NumPy array of strings
+
+        # Accumulate all keep_paths from all dirs
+        combined_keep_paths = set()
+        for dir_path in keep_samples_dirs:
+            keep_paths_array = np.load(dir_path, allow_pickle=True)
+            combined_keep_paths.update(keep_paths_array.tolist())
+
+        # Find indices in cur_paths that match any in combined_keep_paths
+        samples_indices = [j for j, p in enumerate(cur_paths) if p in combined_keep_paths]
+        all_samples_indices.append(samples_indices)
+
+    return all_samples_indices
     
         
 

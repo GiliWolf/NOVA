@@ -1,7 +1,7 @@
 import math
 from functools import partial
 import warnings
-import logging
+
 import torch
 import torch.nn as nn
 
@@ -187,34 +187,7 @@ class VisionTransformer(nn.Module):
         self.norm = norm_layer(embed_dim)
 
         # Classifier head
-
-        ### NOTE! SAGY 120625!
-        ### MLP HEAD!! ###
-        is_MLP_head = kwargs.get('is_MLP_head', False)
-        print(f"is_MLP_head: {is_MLP_head}")
-        logging.info(f"is_MLP_head: {is_MLP_head}")
-        if is_MLP_head:
-            hidden = embed_dim * mlp_ratio
-            print(f"Using MLP head with hidden dim {hidden} and num_classes {num_classes} ")
-            logging.info(f"Using MLP head with hidden dim {hidden} and num_classes {num_classes}")
-            self.head = nn.Sequential(
-                nn.Linear(embed_dim, hidden, bias=False),
-                nn.BatchNorm1d(hidden),
-                nn.GELU(),
-                nn.Linear(hidden, hidden // 2, bias=False),
-                nn.BatchNorm1d(hidden // 2),     
-                nn.GELU(),
-                nn.Linear(hidden // 2, num_classes), 
-                nn.LayerNorm(num_classes)    # helps stability
-            )
-            # NOTE: SAGY 190625
-            # self.residual_head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
-        else:
-            logging.info(f"Using linear head with num_classes {num_classes}")
-            print(f"Using linear head with num_classes {num_classes}")
-            self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
-
-        #########################
+        self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
         _trunc_normal_(self.pos_embed, std=.02)
         _trunc_normal_(self.cls_token, std=.02)
@@ -273,16 +246,11 @@ class VisionTransformer(nn.Module):
             x = blk(x)
         x = self.norm(x)
         
-
-        projected = self.head(x[:, 0])
-        # SAGY 190625 (adding residual head)
-        # projected = self.head(x[:, 0]) + self.residual_head(x[:, 0])
-
         # SAGY 270624
         if return_hidden:
-            return projected, x[:, 0]
+            return self.head(x[:, 0]), x[:, 0]
         else:
-            return projected
+            return self.head(x[:, 0])
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)
@@ -300,8 +268,6 @@ class VisionTransformer(nn.Module):
             x, attn = blk(x, return_both=True)
             attns.append(attn)
             
-        # return torch.vstack(attns)
-        # GILI:
         return torch.stack(attns)
 
     def get_intermediate_layers(self, x, n=1):

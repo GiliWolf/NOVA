@@ -84,7 +84,7 @@ class EmbeddingsNewdNLSDatasetConfigCombined(EmbeddingsNewdNLSDatasetConfig):
         super().__init__()
 
         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in
-                        ["batch4", "batch5"]]
+                        ["batch5"]]
 
         self.SHUFFLE:bool = False
 
@@ -96,7 +96,7 @@ class EmbeddingsNewdNLSDatasetConfigCombined(EmbeddingsNewdNLSDatasetConfig):
         self.CELL_LINES:List[str]         = ["WT", "dNLS"]
 
         # Conditions to include
-        self.CONDITIONS:List[str]         = ["dox", "Untreated"]
+        self.CONDITIONS:List[str]         = ["DOX", "Untreated"]
 
 # SUBSET 
 class NewdNLSDoxVsUntreatedSubset(EmbeddingsNewdNLSDatasetConfigCombined):
@@ -104,7 +104,7 @@ class NewdNLSDoxVsUntreatedSubset(EmbeddingsNewdNLSDatasetConfigCombined):
         super().__init__()
 
         self.CELL_LINES: List[str] = ["dNLS"]
-        self.CONDITIONS: List[str] = ["dox", "untreated"]
+        self.CONDITIONS: List[str] = ["DOX", "Untreated"]
 
 ################# NEW INDI: EmbeddingsDay8CombinedDatasetConfig #######################
 class EmbeddingsDay8NewDatasetConfig(EmbeddingsConfig):
@@ -126,16 +126,16 @@ class EmbeddingsDay8DatasetConfigCombined(EmbeddingsDay8NewDatasetConfig):
         super().__init__()
 
         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
-                        ["batch8"]]
+                        ["batch1"]]
 
         self.SHUFFLE:bool = False
 
         self.SETS:List[str] = ['testset']
 
-        self.MARKERS:List[str]            =  ["G3BP1", "FUS", "FMRP", "TDP"]
+        self.MARKERS:List[str]            =  ["G3BP1", "FUS", "FMRP", "TDP43"]
 
         # Cell lines to include
-        self.CELL_LINES:List[str]         = ["WT", "FUSHeterozygous", "FUSHomozygous", "FUSRevertant"]
+        self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "FUSRevertant"]
 
         # Conditions to include
         self.CONDITIONS:List[str]         = ["stress", "Untreated"]
@@ -188,7 +188,7 @@ class NewIndiTDP43vsWTSubset(EmbeddingsDay8DatasetConfigCombined):
 
         self.CELL_LINES: List[str] = ["TDP43", "WT"]
         self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["TDP"]
+        self.MARKERS: List[str] = ["TDP43"]
 
 class NewIndiWTStressVsUntreatedSubset(EmbeddingsDay8DatasetConfigCombined):
     def __init__(self):

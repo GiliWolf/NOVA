@@ -63,11 +63,13 @@ def display_embeddings(df:pd.DataFrame, save_dir: str = None):
         df.to_csv(save_path, index=False)
 
 
-def load_paths_from_npy(embd_dir, set_type):
+def load_paths_from_npy(input_path, set_type = None):
 
     # Load data
-    paths = np.load(os.path.join(embd_dir, f"{set_type}_paths.npy"), allow_pickle=True)
-
+    if set_type is not None:
+        paths = np.load(os.path.join(input_path, f"{set_type}_paths.npy"), allow_pickle=True)
+    else:
+        paths = np.load(input_path, allow_pickle=True)
     df = parse_paths(paths)
 
     return df
@@ -83,19 +85,43 @@ def parse_paths(paths):
     """
 
     # Regex pattern to extract Batch, Condition, Rep, Raw Image Name, Panel, Cell Line, and Tile
+    # pattern = re.compile(
+    # r".*/[Bb]atch(\d+)/([^/]+)/([^/]+)/([^/]+)/(rep\d+)_.*_(s\d+)_?(panel\w+)_.*_processed\.npy/(\d+)"
+    # )
+    # pattern = re.compile(
+    # r".*/[Bb]atch(\d+)/([^/]+)/([^/]+)/([^/]+)/(rep\d+)_.*?(?:f(\d+)[^/]*|_s(\d+))_(panel\w+)_.*_processed\.npy/(\d+)"
+    # )
+
+
+    # # Parsing the paths
+    # parsed_data = [pattern.match(path).groups() for path in paths if pattern.match(path)]
+
+    # if len(parsed_data) != len(paths):
+    #     raise RuntimeError("in parse_paths: not all paths match the regex pattern.")
+    # # Convert metadata to DataFrame
+    # df = pd.DataFrame(parsed_data, columns=[
+    # "Batch", "Cell_Line", "Condition", "Marker", "Rep", "Site", "Panel", "Tile"
+    # ])
+
+    # Regex with named capture groups
     pattern = re.compile(
-    r".*/[Bb]atch(\d+)/([^/]+)/([^/]+)/([^/]+)/(rep\d+)_.*_(s\d+)_?(panel\w+)_.*_processed\.npy/(\d+)"
-)
+        r".*/[Bb]atch(?P<Batch>\d+)/(?P<Cell_Line>[^/]+)/(?P<Condition>[^/]+)/(?P<Marker>[^/]+)/"
+        r"(?P<Rep>rep\d+)_.*?(?:f(?P<Site_f>\d+)[^/]*|_s(?P<Site_s>\d+))_"
+        r"(?P<Panel>panel\w+)_.*_processed\.npy/(?P<Tile>\d+)"
+    )
+    parsed_data = []
+    for path in paths:
+        match = pattern.match(path)
+        if not match:
+            raise RuntimeError(f"in parse_paths: path did not match pattern: {path}")
+        data = match.groupdict()
+        data["Site"] = data["Site_f"] or data["Site_s"]  # Normalize site
+        del data["Site_f"]
+        del data["Site_s"]
+        parsed_data.append(data)
 
-    # Parsing the paths
-    parsed_data = [pattern.match(path).groups() for path in paths if pattern.match(path)]
-
-    if len(parsed_data) != len(paths):
-        raise RuntimeError("in parse_paths: not all paths match the regex pattern.")
-    # Convert metadata to DataFrame
-    df = pd.DataFrame(parsed_data, columns=[
-    "Batch", "Cell_Line", "Condition", "Marker", "Rep", "Site", "Panel", "Tile"
-    ])
+    # Convert to DataFrame
+    df = pd.DataFrame(parsed_data)
     df['Path'] = paths
     df['File_Name'] = [os.path.basename(path.split('.npy')[0]) for path in paths]
 
@@ -139,16 +165,14 @@ def load_tile(path, tile):
     marker = site_image[:, :, 0]
     nucleus = site_image[:, :, 1]
 
-    # # Normalize
-    # marker1 = (marker - marker.min()) / (marker.max() - marker.min())
-    # nucleus1 = (nucleus - nucleus.min()) / (nucleus.max() - nucleus.min())
-    # marker2 = np.clip(marker, 0, 1)
-    # nucleus2 = np.clip(nucleus, 0, 1)
+    # Normalize
+    marker1 = (marker - marker.min()) / (marker.max() - marker.min())
+    nucleus1 = (nucleus - nucleus.min()) / (nucleus.max() - nucleus.min())
 
-    # Create RGB overlay: Red for marker, Green for nucleus
-    overlay = np.zeros((*marker.shape, 3))
-    overlay[..., 2] = marker      # blue channel = marker
-    overlay[..., 1] = nucleus     # Green channel = nucleus
+    # Create RGB overlay: 
+    overlay = np.zeros((*marker.shape, 3)) # black background
+    overlay[..., 2] = nucleus      # blue channel = nucleus
+    overlay[..., 1] = marker     # Green channel = marker
 
     return marker, nucleus, overlay
 
@@ -176,7 +200,7 @@ def display_tile(Site:str, tile:int, marker:np.array, nucleus:np.array, overlay:
     else:
         plt.show()
 
-def __extract_indices_to_plot(keep_samples_dirs: list[str], paths: np.ndarray, data_config: DatasetConfig):
+def __extract_indices_to_plot(keep_samples_dirs: list[str], paths: np.ndarray, data_config: DatasetConfig, use_settype = True):
     """
     Extract indices to plot from a list of keep_samples_dirs.
     For each dataset split (train/val/test or test), collects indices from all directories and concatenates them.
@@ -203,7 +227,10 @@ def __extract_indices_to_plot(keep_samples_dirs: list[str], paths: np.ndarray, d
         # Accumulate all keep_paths from all dirs
         combined_keep_paths = set()
         for dir_path in keep_samples_dirs:
-            keep_paths_df = load_paths_from_npy(dir_path, set_type)
+            if use_settype:
+                keep_paths_df = load_paths_from_npy(dir_path, set_type)
+            else:
+                keep_paths_df = load_paths_from_npy(dir_path)
             combined_keep_paths.update(keep_paths_df["Path"].tolist())
 
         # Get indices of matching paths

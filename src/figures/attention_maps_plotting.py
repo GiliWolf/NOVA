@@ -17,7 +17,7 @@ import cv2
 from PIL import Image
 from matplotlib import gridspec
 from tools.load_data_from_npy import parse_paths, load_tile, load_paths_from_npy, Parse_Path_Item
-
+from skimage.metrics import structural_similarity as ssim
 
 
 # def plot_attn_maps(processed_attn_maps: np.ndarray[float], labels: np.ndarray[str], 
@@ -112,7 +112,7 @@ def plot_attn_maps(processed_attn_maps: np.ndarray[float], labels: np.ndarray[st
             img_path, tile, site = Parse_Path_Item(path_item)
 
             # plot
-            temp_output_folder_path = os.path.join(output_folder_path, set_type, os.path.basename(img_path).split('.npy')[0])
+            temp_output_folder_path = os.path.join(output_folder_path, os.path.basename(img_path).split('.npy')[0])
             os.makedirs(temp_output_folder_path, exist_ok=True)
             __plot_attn(sample_attn, (img_path, site, tile, label), config_plot, temp_output_folder_path, corr = corr, corr_method = corr_method)
     
@@ -172,7 +172,7 @@ def _plot_attn_map_rollout(processed_attn_map, sample_info, config_plot, output_
     heatmap_colored = __color_heatmap_attn_map(processed_attn_map, heatmap_color=config_plot.PLOT_HEATMAP_COLORMAP)
     
     # create figure
-    __create_attn_map_img(processed_attn_map, input_img, heatmap_colored, config_plot, sup_title= f"Tile{tile}\nRollout\n{label}", output_folder_path= output_folder_path, corr_data = corr, corr_method = corr_method)
+    __create_attn_map_img_test(processed_attn_map, input_img, heatmap_colored, config_plot, sup_title= f"{label}_Tile{tile}", output_folder_path= output_folder_path, corr_data = corr, corr_method = corr_method)
 
 
 
@@ -210,11 +210,11 @@ def __create_attn_map_img(attn_map, input_img, heatmap_colored, config_plot, sup
                     transform=ax[1].transAxes, ha='center', va='center', fontsize=config_plot.PLOT_TITLE_FONTSIZE, color='black')
 
         
-        ax[0].set_title(f'Input - Marker (blue), Nucleus (green)', fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+        ax[0].set_title(f'Input - Marker (green), Nucleus (blue)', fontsize=config_plot.PLOT_TITLE_FONTSIZE)
         ax[0].imshow(input_img)
         ax[0].set_axis_off()
 
-        ax[1].set_title(f'Attention Heatmap', fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+        ax[1].set_title(f'Attention Heatmap: No Th', fontsize=config_plot.PLOT_TITLE_FONTSIZE)
         ax[1].imshow(cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB))
         ax[1].set_axis_off()
 
@@ -234,10 +234,10 @@ def __create_attn_map_img(attn_map, input_img, heatmap_colored, config_plot, sup
             (1, 0, 0, 0.8)]         # red
         )
 
-        ax[2].set_title('Attention Overlay', fontsize=config_plot.PLOT_TITLE_FONTSIZE)
+        ax[2].set_title(f'Attention Overlay: Th{config_plot.ATTN_OVERLAY_THRESHOLD}', fontsize=config_plot.PLOT_TITLE_FONTSIZE)
         ax[2].imshow(input_img)  # Show the original image
 
-        levels = np.linspace(0.2, 1.0, config_plot.NUM_CONTOURS) # skip 20% lowest values  
+        levels = np.linspace(config_plot.ATTN_OVERLAY_THRESHOLD, 1.0, config_plot.NUM_CONTOURS) # skip 20% lowest values  
         contours = ax[2].contourf(
             attn_map,
             levels=levels,
@@ -267,6 +267,104 @@ def __create_attn_map_img(attn_map, input_img, heatmap_colored, config_plot, sup
 
         logging.info(f"[plot_attn_maps] attn maps saved: {save_path}")
         return fig
+
+
+
+
+def __create_attn_map_img_test(attn_map, input_img, heatmap_colored, config_plot, sup_title = "Attention Maps", output_folder_path = None, corr_data = None, corr_method = None):
+    """
+    Visualize attention alongside marker and nucleus channels in a 2x2 layout:
+
+        [0,0] Marker channel       [0,1] Overlay (Input + Attn)
+        [1,0] Nucleus channel      [1,1] Heatmap
+
+    Args:
+        attn_map: (H, W) attention map, scaled [0, 1]
+        input_img: (H, W, 3) RGB image
+        heatmap_colored: (H, W, 3) attention heatmap (BGR)
+        config_plot: plotting config
+        sup_title: overall title
+        output_folder_path: optional path to save the figure
+
+    Returns:
+        fig: matplotlib figure object
+    """
+
+    alpha = config_plot.ALPHA
+    
+    # Create figure with minimal spacing
+    fig, ax = plt.subplots(2, 2, figsize=config_plot.FIG_SIZE, 
+                          gridspec_kw={'wspace': 0.02, 'hspace': 0.25})
+
+    # Extract channels
+    nucleus = input_img[..., 2]
+    marker = input_img[..., 1]
+
+    # Create RGB versions with black background for marker and nucleus
+    nucleus_rgb = np.zeros_like(input_img)
+    nucleus_rgb[..., 2] = nucleus
+
+    marker_rgb = np.zeros_like(input_img)
+    marker_rgb[..., 1] = marker
+
+    # [0,0] Marker channel
+    ax[0, 0].imshow(marker_rgb)
+    ax[0, 0].set_title("Marker (Green)", fontsize=config_plot.PLOT_TITLE_FONTSIZE, pad=5)
+    ax[0, 0].set_axis_off()
+
+    # [0,1] Overlay (Input + Attn)
+    ax[0, 1].imshow(input_img)
+    ax[0, 1].set_title(f"Overlay (Th={config_plot.ATTN_OVERLAY_THRESHOLD})", fontsize=config_plot.PLOT_TITLE_FONTSIZE, pad=5)
+
+    # Contour fill & lines for attention overlay
+    fill_cmap = LinearSegmentedColormap.from_list(
+        'fill_colors',
+        [(0, 0, 0, 0),
+         (1, 1, 0, 0.4),
+         (1, 0.6, 0, 0.6),
+         (1, 0, 0, 0.8)]
+    )
+    line_cmap = LinearSegmentedColormap.from_list(
+        'line_colors',
+        [(1, 1, 1, 0.2),
+         (1, 1, 0, 0.4),
+         (1, 0.6, 0, 0.6),
+         (1, 0, 0, 0.8)]
+    )
+    levels = np.linspace(config_plot.ATTN_OVERLAY_THRESHOLD, 1.0, config_plot.NUM_CONTOURS)
+    ax[0, 1].contourf(attn_map, levels=levels, cmap=fill_cmap, alpha=alpha)
+    ax[0, 1].contour(attn_map, levels=levels, cmap=line_cmap, linewidths=1.0, alpha=alpha + 0.05)
+    ax[0, 1].set_axis_off()
+
+    # [1,0] Nucleus channel
+    ax[1, 0].imshow(nucleus_rgb)
+    ax[1, 0].set_title("Nucleus (Blue)", fontsize=config_plot.PLOT_TITLE_FONTSIZE, pad=5)
+    ax[1, 0].set_axis_off()
+
+    # [1,1] Heatmap
+    ax[1, 1].imshow(cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB))
+    ax[1, 1].set_title("Attention Heatmap", fontsize=config_plot.PLOT_TITLE_FONTSIZE, pad=5)
+    ax[1, 1].set_axis_off()
+
+    # Add main title with proper spacing
+    fig.suptitle(sup_title, fontsize=config_plot.PLOT_SUPTITLE_FONTSIZE, y=0.95)
+
+    # Fine-tune the layout
+    plt.subplots_adjust(top=0.88, bottom=0.02, left=0.02, right=0.98)
+
+    if config_plot.SAVE_PLOT and output_folder_path is not None:
+        fig_name = sup_title.split('\n', 1)[0]
+        save_path = os.path.join(output_folder_path, f"{fig_name}.png")
+        plt.savefig(save_path, dpi=config_plot.PLOT_SAVEFIG_DPI, 
+                    bbox_inches='tight',facecolor='white', 
+                    edgecolor='none', pad_inches=0.05)
+        plt.close()
+        logging.info(f"[plot_attn_maps] attn maps saved: {save_path}")
+    elif config_plot.SHOW_PLOT:
+        plt.show()
+
+    return fig
+
 
 
 def __create_all_layers_attn_map_img(attn_maps, input_img, config_plot, sup_title = "Attention Maps", output_folder_path = None, corr_data_list = None, corr_method = None):

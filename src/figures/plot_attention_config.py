@@ -20,6 +20,7 @@ class PlotAttnMapConfig(BaseConfig):
 
         self.NUM_CONTOURS:int = None # numbed of contours lines for the attention map
 
+        self.ATTN_OVERLAY_THRESHOLD:float = None
         # Controls layout size of the output figure.
         self.FIG_SIZE:tuple = None
 
