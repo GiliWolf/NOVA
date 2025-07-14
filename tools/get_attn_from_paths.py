@@ -39,28 +39,6 @@ def generate_attn_maps_with_model(paths:list, outputs_folder_path:str, config_pa
             - process the attention maps according to the parameters in the attn config
             - saves the processed attn maps
     """
-    paths_by_type = {
-        "nice_cell_wo_background": [
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f124-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/Untreated/G3BP1/rep1_r01c02f81-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch7/WT/Untreated/G3BP1/rep2_r02c02f75-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep1_r01c02f119-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep1_r01c02f208-ch4t1_panelA_WT_processed.npy",
-        ],
-        "nice_cell_with_background_dots": [
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/Untreated/G3BP1/rep1_r01c02f226-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f31-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f199-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch7/WT/Untreated/G3BP1/rep1_r01c02f23-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch7/WT/Untreated/G3BP1/rep1_r01c02f113-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep2_r02c02f13-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep2_r02c02f13-ch4t1_panelA_WT_processed.npy",
-        ],
-        "very_bad_cell_with_background_dots": [
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/Untreated/G3BP1/rep1_r01c02f92-ch4t1_panelA_WT_processed.npy",
-            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep2_r02c02f43-ch4t1_panelA_WT_processed.npy",
-        ],
-    }
 
     # load configs
     config_data:DatasetConfig = load_config_file(config_path_data, "data")
@@ -74,7 +52,7 @@ def generate_attn_maps_with_model(paths:list, outputs_folder_path:str, config_pa
 
 
     for description, paths in paths_by_type.items():
-        temp_output_path = os.path.join("attn_by_paths_gili","threshold0.5", description)
+        temp_output_path = os.path.join("attn_by_paths", description)
         batch_size = len(paths)
         # create dataset
         dataset = DatasetFromPaths(config_data, paths)
@@ -98,11 +76,32 @@ def __generate_attn_maps_with_paths_dataloader(dataset:DatasetNOVA, model:NOVAMo
     
     return attn_maps, labels, paths
 
+paths_by_type = {
+        "nice_cell_wo_background": [
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f124-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/Untreated/G3BP1/rep1_r01c02f81-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch7/WT/Untreated/G3BP1/rep2_r02c02f75-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep1_r01c02f119-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep1_r01c02f208-ch4t1_panelA_WT_processed.npy",
+        ],
+        "nice_cell_with_background_dots": [
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/Untreated/G3BP1/rep1_r01c02f226-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f31-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f199-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch7/WT/Untreated/G3BP1/rep1_r01c02f23-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch7/WT/Untreated/G3BP1/rep1_r01c02f113-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep2_r02c02f13-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep2_r02c02f13-ch4t1_panelA_WT_processed.npy",
+        ],
+        "very_bad_cell_with_background_dots": [
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/Untreated/G3BP1/rep1_r01c02f92-ch4t1_panelA_WT_processed.npy",
+            # "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch10/WT/Untreated/G3BP1/rep2_r02c02f43-ch4t1_panelA_WT_processed.npy",
+        ],
+    }
 
 if __name__ == "__main__":
     print("Starting generate attention maps...")
     
-    paths = ['/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch2/WT/stress/G3BP1/rep1_r01c01f124-ch4t1_panelA_WT_processed.npy']
 
     try:
         if len(sys.argv) < 5:
@@ -124,7 +123,7 @@ if __name__ == "__main__":
                 raise ValueError("Invalid batch size, must be integer")
         else:
             batch_size = 10
-        generate_attn_maps_with_model(paths, outputs_folder_path, config_path_data, config_path_attn, config_path_plot, batch_size)
+        generate_attn_maps_with_model(paths_by_type, outputs_folder_path, config_path_data, config_path_attn, config_path_plot, batch_size)
         
     except Exception as e:
         logging.exception(str(e))

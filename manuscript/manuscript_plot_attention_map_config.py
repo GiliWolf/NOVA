@@ -18,7 +18,7 @@ class BaseAttnMapPlotConfig(PlotAttnMapConfig):
 
         self.NUM_CONTOURS:int = 8
 
-        self.ATTN_OVERLAY_THRESHOLD:float = 0.5 # the percentage of the attn values to be visualized on top of the inout image 
+        self.ATTN_OVERLAY_THRESHOLD:float = 0.3 # the percentage of the attn values to be visualized on top of the input image 
         # Controls layout size of the output figure.
         self.FIG_SIZE:tuple = (8,8)
 

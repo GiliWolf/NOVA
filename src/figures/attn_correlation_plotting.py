@@ -34,12 +34,14 @@ def plot_correlation(corr_data, corr_method, config_plot, channel_names=None,
 
     # Step 1: Normalize shape to (N, L, C)
     if corr_data.ndim == 2:
+        old_shape = corr_data.shape
         corr_data = corr_data[:, np.newaxis, :]  # shape (N, 1, C)
-        only_one_layer = True
-    elif corr_data.ndim == 3:
-        only_one_layer = False
-    else:
-        raise ValueError(f"Unsupported shape for corr_data: {corr_data.shape}")
+        logging.info(f'[plot_corr_data] reshaping corr_data: {old_shape} -> {corr_data.shape}')
+    #     only_one_layer = True
+    # elif corr_data.ndim == 3:
+    #     only_one_layer = False
+    # else:
+    #     raise ValueError(f"Unsupported shape for corr_data: {corr_data.shape}")
 
     num_samples, num_layers, num_channels = corr_data.shape
 
@@ -125,12 +127,15 @@ def plot_correlation_by_markers(corr_by_markers, corr_method, config_plot, chann
 
     # Normalize shape: (N, C) → (N, 1, C)
     if sample.ndim == 2:
+        old_shape = sample.shape
         corr_by_markers = {k: v[:,  np.newaxis, :] for k, v in corr_by_markers.items()}
-        is_rollout = True
-    elif sample.ndim == 3:
-        is_rollout = False
-    else:
-        raise ValueError(f"Unsupported shape: {sample.shape}")
+        new_sample = np.array(next(iter(corr_by_markers.values())))
+        logging.info(f'[plot_corr_data] reshaping corr_data: {old_shape} -> {new_sample.shape}')
+    #     is_rollout = True
+    # elif sample.ndim == 3:
+    #     is_rollout = False
+    # else:
+    #     raise ValueError(f"Unsupported shape: {sample.shape}")
 
     sample = np.array(next(iter(corr_by_markers.values())))
     num_markers = len(marker_names)

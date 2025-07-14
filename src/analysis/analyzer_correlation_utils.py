@@ -43,7 +43,7 @@ def corr_ssim(m1, m2):
 
     return score
 
-def corr_attn_overlap(m1, m2, m2_binary_perc = 0.7):
+def corr_attn_overlap(m1, m2, m2_binary_perc = 0.8):
     """
         for attention maps:
             sums the values of attention (m1) only in the masked area of the input (m2).
@@ -57,6 +57,7 @@ def corr_attn_overlap(m1, m2, m2_binary_perc = 0.7):
         return 0.0
     score = (m1[m2_mask].sum()) / m2_mask.sum() #normalize by the mask size
     return score
+
 
 def corr_soft_overlap(attn_map, img_ch):
 

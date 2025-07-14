@@ -1,7 +1,5 @@
 import numpy as np
-from scipy.spatial.distance import cdist
 import os
-import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
@@ -55,6 +53,7 @@ def compute_pair_wise_distances(a1:np.array, a2:np.array, metric='euclidean'):
         dim2: dimension of a2
         flattened_distances: distance matrix 
     """
+    from scipy.spatial.distance import cdist
     distances = cdist(a1, a2, metric=metric)  
     return distances
 
