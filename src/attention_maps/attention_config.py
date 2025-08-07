@@ -32,6 +32,12 @@ class AttnConfig(BaseConfig):
         # options: ["pearsonr", "mutual_info", "ssim", "attn_overlap"]
         self.CORR_METHOD:str = None
 
+        # num of workers for processing the raw attn maps parallely (multi-proccesing)
+        self.ATTN_NUM_WORKERS:int = None
+
+        #flag to save the raw attention 
+        self.SAVE_RAW_ATTN:bool = False
+
 
     
         

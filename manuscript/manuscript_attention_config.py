@@ -22,6 +22,8 @@ class BaseAttnConfig(AttnConfig):
 
         self.MIN_ATTN_THRESHOLD:float = 0.0
 
-        self.ATTN_NUM_WORKERS:int = 6
+        self.ATTN_NUM_WORKERS:int = 8
+
+        self.SAVE_RAW_ATTN:bool = False
 
 

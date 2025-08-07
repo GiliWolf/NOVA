@@ -15,6 +15,9 @@ class PlotAttnMapConfig(BaseConfig):
         
         super().__init__()
 
+        # num of workers for plotting the processed attn maps parallely (multi-threading)
+        self.PLOT_ATTN_NUM_WORKERS:int = None
+
         # Controls transparency of the attention overlay (higher alpha = more visible red)
         self.ALPHA:float = None
 

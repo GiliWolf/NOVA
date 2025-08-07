@@ -42,7 +42,8 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
     else:
         corr_method = ""
         corr_data = None
-
+    
+    num_workers = min(config_plot.PLOT_ATTN_NUM_WORKERS, os.cpu_count())
     # filter for subsets if needed
     if config_plot.FILTER_SAMPLES_BY_FOLDER_PATHS:
         marker_names = get_unique_parts_from_labels(labels, get_markers_from_labels)
@@ -61,7 +62,7 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
             save_path = os.path.join(attn_maps_output_folder,marker)
             plot_attn_maps(marker_processed_attn_maps, marker_labels, marker_paths, 
                             config_data, config_plot, 
-                            output_folder_path=save_path, num_workers = config_plot.PLOT_ATTN_NUM_WORKERS, 
+                            output_folder_path=save_path, num_workers = num_workers, 
                             corr_data =  marker_corr_data,corr_method = corr_method)
     
     # TODO: keep seperation by settype?
@@ -69,7 +70,7 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
         plot_attn_maps(processed_attn_maps, labels, paths, 
                         config_data, config_plot, 
                         output_folder_path=d.get_saving_folder(feature_type="attention_maps"),
-                        num_workers = config_plot.PLOT_ATTN_NUM_WORKERS, 
+                        num_workers = num_workers, 
                         corr_data =  corr_data,corr_method = corr_method)
 
 def extract_indices(keep_samples_dirs: list[str], paths: np.ndarray, data_config: DatasetConfig):
