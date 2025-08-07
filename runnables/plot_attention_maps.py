@@ -44,7 +44,7 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
         corr_data = None
 
     # filter for subsets if needed
-    if config_plot.FILTER_SAMPLES_BY_FOLDER_PATHS is not None:
+    if config_plot.FILTER_SAMPLES_BY_FOLDER_PATHS:
         marker_names = get_unique_parts_from_labels(labels, get_markers_from_labels)
         pair_wise_output_folder = d.get_saving_folder(feature_type='pairwise_distances', main_folder = 'figures')
         attn_maps_output_folder = d.get_saving_folder(feature_type="attention_maps", main_folder = 'figures')
@@ -59,11 +59,18 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
             else:
                 marker_corr_data = None
             save_path = os.path.join(attn_maps_output_folder,marker)
-            plot_attn_maps(marker_processed_attn_maps, marker_labels, marker_paths, config_data, config_plot, output_folder_path=save_path,corr_data =  marker_corr_data,corr_method = corr_method)
+            plot_attn_maps(marker_processed_attn_maps, marker_labels, marker_paths, 
+                            config_data, config_plot, 
+                            output_folder_path=save_path, num_workers = config_plot.PLOT_ATTN_NUM_WORKERS, 
+                            corr_data =  marker_corr_data,corr_method = corr_method)
     
     # TODO: keep seperation by settype?
     else:
-        plot_attn_maps(processed_attn_maps, labels, paths, config_data, config_plot, output_folder_path=d.get_saving_folder(feature_type="attention_maps"),corr_data =  corr_data,corr_method = corr_method)
+        plot_attn_maps(processed_attn_maps, labels, paths, 
+                        config_data, config_plot, 
+                        output_folder_path=d.get_saving_folder(feature_type="attention_maps"),
+                        num_workers = config_plot.PLOT_ATTN_NUM_WORKERS, 
+                        corr_data =  corr_data,corr_method = corr_method)
 
 def extract_indices(keep_samples_dirs: list[str], paths: np.ndarray, data_config: DatasetConfig):
     if data_config.SPLIT_DATA:
@@ -91,7 +98,7 @@ def extract_indices(keep_samples_dirs: list[str], paths: np.ndarray, data_config
         
 
 if __name__ == "__main__":
-    print("Starting generating distances...")
+    print("Starting plotting attention maps...")
     try:
         if len(sys.argv) < 4:
             raise ValueError("Invalid arguments. Must supply output folder path, data config and path config!")

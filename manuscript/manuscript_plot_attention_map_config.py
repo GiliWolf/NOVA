@@ -12,6 +12,7 @@ class BaseAttnMapPlotConfig(PlotAttnMapConfig):
     def __init__(self):
         super().__init__()
 
+        self.PLOT_ATTN_NUM_WORKERS:int = 8
 
         # Controls transparency of the attention overlay (higher alpha = more visible red)
         self.ALPHA:float = 0.2

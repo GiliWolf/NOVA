@@ -34,15 +34,15 @@ def generate_attn_maps_with_model(outputs_folder_path:str, config_path_data:str,
     # load model
     chkp_path = os.path.join(outputs_folder_path, CHECKPOINTS_FOLDERNAME, CHECKPOINT_BEST_FILENAME)
     model = NOVAModel.load_from_checkpoint(chkp_path)
-    
+
     # generate (extract from model) raw attention maps and save
     attn_maps, labels, paths = generate_attn_maps(model, config_data, batch_size=batch_size)
-    save_attn_maps(attn_maps, labels, paths, config_data, output_folder_path=os.path.join(outputs_folder_path, "attention_maps", "raw"))
+    #save_attn_maps(attn_maps, labels, paths, config_data, output_folder_path=os.path.join(outputs_folder_path, "attention_maps", "raw"))
 
     # process the raw attn_map and save 
-    processed_attn_maps = process_attn_maps(attn_maps, labels, config_data, config_attn)
+    processed_attn_maps = process_attn_maps(attn_maps, labels, config_data, config_attn, num_workers=config_attn.ATTN_NUM_WORKERS)
+    del attn_maps
     save_attn_maps(processed_attn_maps, labels, paths, config_data, output_folder_path=os.path.join(outputs_folder_path, "attention_maps", "processed"))
-
 
 
 if __name__ == "__main__":

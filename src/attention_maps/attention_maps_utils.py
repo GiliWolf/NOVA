@@ -4,7 +4,8 @@ import cv2
 from PIL import Image
 sys.path.insert(0, os.getenv("HOME"))
 sys.path.insert(1, os.getenv("NOVA_HOME"))
-
+from functools import partial
+from concurrent.futures import ProcessPoolExecutor
 import logging
 from src.models.architectures.NOVA_model import NOVAModel
 from src.embeddings.embeddings_utils import load_embeddings
@@ -133,7 +134,7 @@ def __generate_attn_maps_with_dataloader(dataset:DatasetNOVA, model:NOVAModel, b
 
 
 def process_attn_maps(attn_maps: np.ndarray[float], labels: np.ndarray[str], 
-                        data_config: DatasetConfig, config_attn: AttnConfig):
+                        data_config: DatasetConfig, config_attn: AttnConfig, num_workers:int = 4):
     """
     Process attention maps.
 
@@ -174,22 +175,24 @@ def process_attn_maps(attn_maps: np.ndarray[float], labels: np.ndarray[str],
         
         set_attn_maps = []
         for batch, batch_indexes in __dict_temp.items():
-            #extract current batch samples
             batch_attn_maps = cur_attn_maps[batch_indexes]
 
-            for index, (sample_attn) in enumerate(batch_attn_maps):
-                processed_attn_map =  globals()[f"_process_attn_map_{config_attn.ATTN_METHOD}"](sample_attn, config_attn)
-                num_patches = processed_attn_map.shape[-1]
-                patch_dim = int(np.sqrt(num_patches))
-                processed_attn_map =__resize_attn_map(processed_attn_map, patch_dim, img_shape, resample_method=config_attn.RESAMPLE_METHOD)
-                set_attn_maps.append(processed_attn_map)
-        
+            fn = partial(_process_single_attn_sample, config_attn=config_attn, img_shape=img_shape)
+            with ProcessPoolExecutor(max_workers=num_workers) as executor:
+                set_attn_maps.extend(executor.map(fn, batch_attn_maps))
         # end of set type
         set_attn_maps = np.stack(set_attn_maps)
         all_attn_maps.append(set_attn_maps)
 
     # end of samples
     return all_attn_maps
+
+def _process_single_attn_sample(sample_attn, config_attn, img_shape):
+    processed_attn_map = globals()[f"_process_attn_map_{config_attn.ATTN_METHOD}"](sample_attn, config_attn)
+    num_patches = processed_attn_map.shape[-1]
+    patch_dim = int(np.sqrt(num_patches))
+    processed_attn_map = __resize_attn_map(processed_attn_map, patch_dim, img_shape, resample_method=config_attn.RESAMPLE_METHOD)
+    return processed_attn_map
 
 def _process_attn_map_rollout(attn:np.ndarray[float], config_attn:AttnConfig):
     # Rollout attention workflow : 

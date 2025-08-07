@@ -17,71 +17,17 @@ import cv2
 from PIL import Image
 from matplotlib import gridspec
 from tools.load_data_from_npy import parse_paths, load_tile, load_paths_from_npy, Parse_Path_Item
-from skimage.metrics import structural_similarity as ssim
+from concurrent.futures import ThreadPoolExecutor
 
 
-# def plot_attn_maps(processed_attn_maps: np.ndarray[float], labels: np.ndarray[str], 
-#                     paths: np.ndarray[str], data_config: DatasetConfig,  
-#                     config_plot: PlotAttnMapConfig, output_folder_path: str, corr_data = None, corr_method = None):
-#     """
-#     for each sample in processed_attn_maps create and saves a figure of the input image, its attention map and overlay. 
-#     in the process it calculate ad return each samples correlation score between the attn map and the input image. 
-
-#     """
-
-#     os.makedirs(output_folder_path, exist_ok=True)
-
-#     unique_batches = get_unique_parts_from_labels(labels[0], get_batches_from_labels, data_config)
-#     logging.info(f'[plot_attn_maps] unique_batches: {unique_batches}')
-
-#     if data_config.SPLIT_DATA:
-#         data_set_types = ['trainset','valset','testset']
-#     else:
-#         data_set_types = ['testset']
-    
-#     for i, set_type in enumerate(data_set_types):
-#         cur_attn_maps, cur_labels, cur_paths = processed_attn_maps[i], labels[i], paths[i]
-#         if corr_data is not None:
-#             cur_corr_data = corr_data[i]
-
-#         batch_of_label = get_batches_from_labels(cur_labels, data_config)
-#         __dict_temp = {batch: np.where(batch_of_label==batch)[0] for batch in unique_batches}
-
-#         img_path_df = parse_paths(cur_paths)
-#         logging.info(f'[plot_attn_maps]: for set {set_type}, starting plotting {len(cur_paths)} samples.')
-        
-#         set_corr_data = []
-#         for batch, batch_indexes in __dict_temp.items():
-#             batch_save_path = os.path.join(output_folder_path, data_config.EXPERIMENT_TYPE, batch)
-#             logging.info(f"[plot_attn_maps] Saving {len(batch_indexes)} in {batch_save_path}")
-
-#             #extract current batch samples
-#             batch_attn_maps = cur_attn_maps[batch_indexes]
-#             batch_labels = cur_labels[batch_indexes]
-#             batch_paths = cur_paths[batch_indexes]
-#             if corr_data is not None:
-#                 batch_corr_data = cur_corr_data[batch_indexes]
-#             else:
-#                 batch_corr_data = [None] * len(batch_labels)
-
-#             for index, (sample_attn, label, img_path, corr) in enumerate(zip(batch_attn_maps, batch_labels, batch_paths, batch_corr_data)):
-#                 # load img details
-#                 path_item = img_path_df.iloc[index]
-#                 img_path, tile, site = Parse_Path_Item(path_item)
-
-#                 # plot
-#                 marker = str(get_markers_from_labels(label))
-#                 temp_output_folder_path = os.path.join(batch_save_path, marker, set_type, os.path.basename(img_path).split('.npy')[0])
-#                 os.makedirs(temp_output_folder_path, exist_ok=True)
-#                 __plot_attn(sample_attn, (img_path, site, tile, label), config_plot, temp_output_folder_path, corr = corr, corr_method = corr_method)
-    
 def plot_attn_maps(processed_attn_maps: np.ndarray[float], labels: np.ndarray[str], 
                     paths: np.ndarray[str], data_config: DatasetConfig,  
-                    config_plot: PlotAttnMapConfig, output_folder_path: str, corr_data = None, corr_method = None):
+                    config_plot: PlotAttnMapConfig, output_folder_path: str,
+                    num_workers:int = 4, 
+                    corr_data = None, corr_method = None):
     """
     for each sample in processed_attn_maps create and saves a figure of the input image, its attention map and overlay. 
-    in the process it calculate ad return each samples correlation score between the attn map and the input image. 
-
+    if corr_data is given, adds the corresponding correlation score to the img. 
     """
 
     os.makedirs(output_folder_path, exist_ok=True)
@@ -98,24 +44,32 @@ def plot_attn_maps(processed_attn_maps: np.ndarray[float], labels: np.ndarray[st
         else:
             cur_corr_data = [None]*len(cur_labels)
 
-        img_path_df = parse_paths(cur_paths)
         logging.info(f'[plot_attn_maps]: for set {set_type}, starting plotting {len(cur_paths)} samples.')
         
-        set_corr_data = []
+        # plot attention samples - multi threading 
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            executor.map(
+                lambda args: _plot_single_attn_sample(*args),
+                zip(
+                    cur_attn_maps,
+                    cur_labels,
+                    cur_paths,
+                    cur_corr_data,
+                    [config_plot]*len(cur_attn_maps),
+                    [output_folder_path]*len(cur_attn_maps),
+                    [corr_method]*len(cur_attn_maps)
+                )
+            )
 
-        #extract current batch samples
+def _plot_single_attn_sample(sample_attn, label, img_path, corr, config_plot, output_folder_path, corr_method):
+    # load img details
+    path_item = parse_paths([img_path]).iloc[0]
+    img_path, tile, site = Parse_Path_Item(path_item)
+    # plot
+    temp_output_folder_path = os.path.join(output_folder_path, os.path.basename(img_path).split('.npy')[0])
+    os.makedirs(temp_output_folder_path, exist_ok=True)
+    __plot_attn(sample_attn, (img_path, site, tile, label), config_plot, temp_output_folder_path, corr=corr, corr_method=corr_method)
 
-
-        for index, (sample_attn, label, img_path, corr) in enumerate(zip(cur_attn_maps, cur_labels, cur_paths, cur_corr_data)):
-            # load img details
-            path_item = img_path_df.iloc[index]
-            img_path, tile, site = Parse_Path_Item(path_item)
-
-            # plot
-            temp_output_folder_path = os.path.join(output_folder_path, os.path.basename(img_path).split('.npy')[0])
-            os.makedirs(temp_output_folder_path, exist_ok=True)
-            __plot_attn(sample_attn, (img_path, site, tile, label), config_plot, temp_output_folder_path, corr = corr, corr_method = corr_method)
-    
 def __plot_attn(proccessed_sample_attn: np.ndarray[float], sample_info:tuple, config_plot, output_folder_path:str, corr:np.ndarray[float] = None, corr_method:str = None):
     """
         calculate correlation data and create figure with the attention map, input image and correlation dta. 

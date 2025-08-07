@@ -106,7 +106,7 @@ def parse_paths(paths):
     # Regex with named capture groups
     pattern = re.compile(
         r".*/[Bb]atch(?P<Batch>\d+)/(?P<Cell_Line>[^/]+)/(?P<Condition>[^/]+)/(?P<Marker>[^/]+)/"
-        r"(?P<Rep>rep\d+)_.*?(?:f(?P<Site_f>\d+)[^/]*|_s(?P<Site_s>\d+))_"
+        r"(?P<Rep>rep\d+)_.*?(?:f(?P<Site_f>\d+)|s(?P<Site_s>\d+)).*?_"
         r"(?P<Panel>panel\w+)_.*_processed\.npy/(?P<Tile>\d+)"
     )
     parsed_data = []

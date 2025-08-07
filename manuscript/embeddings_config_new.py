@@ -31,7 +31,7 @@ class EmbeddingsAlyssaCoyneDatasetConfigCombined(EmbeddingsAlyssaCoyneDatasetCon
                         ["batch1"]]
        
 
-        self.MARKERS:List[str]            =  ["DAPI", "DCP1A", "Map2", "TDP43"]
+        self.MARKERS:List[str]            =  ["FUS", "TDP43"]
 
         # Cell lines to include
         self.CELL_LINES:List[str]         = ["c9orf72ALSPatients", "sALSNegativeCytoTDP43", "sALSPositiveCytoTDP43", "Controls"]
@@ -65,7 +65,7 @@ class AlyssaCoynePositiveTDP43vsControlSubset(EmbeddingsAlyssaCoyneDatasetConfig
         self.CELL_LINES: List[str] = ["sALSPositiveCytoTDP43", "Controls"]
         self.CONDITIONS: List[str] = ["Untreated"]
 
-################# NEW dNLS: EmbeddingsNewdNLSCombinedDatasetConfig #######################
+# ################# NEW dNLS: EmbeddingsNewdNLSCombinedDatasetConfig #######################
 
 class EmbeddingsNewdNLSDatasetConfig(EmbeddingsConfig):
     def __init__(self):
@@ -84,16 +84,16 @@ class EmbeddingsNewdNLSDatasetConfigCombined(EmbeddingsNewdNLSDatasetConfig):
         super().__init__()
 
         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in
-                        ["batch5"]]
+                        ["batch1", "batch2", "batch3", "batch4", "batch5", "batch6"]]
 
         self.SHUFFLE:bool = False
 
         self.SETS:List[str] = ['testset']
 
-        self.MARKERS:List[str]            =  ["DCP1A", "TDP43", "LSM14A"]
+        self.MARKERS:List[str]            =  ["TDP43"]
 
         # Cell lines to include
-        self.CELL_LINES:List[str]         = ["WT", "dNLS"]
+        self.CELL_LINES:List[str]         = ["dNLS"]
 
         # Conditions to include
         self.CONDITIONS:List[str]         = ["DOX", "Untreated"]
@@ -106,94 +106,351 @@ class NewdNLSDoxVsUntreatedSubset(EmbeddingsNewdNLSDatasetConfigCombined):
         self.CELL_LINES: List[str] = ["dNLS"]
         self.CONDITIONS: List[str] = ["DOX", "Untreated"]
 
-################# NEW INDI: EmbeddingsDay8CombinedDatasetConfig #######################
-class EmbeddingsDay8NewDatasetConfig(EmbeddingsConfig):
-    def __init__(self):
-        super().__init__()
+# ################# NEW INDI: EmbeddingsDay8CombinedDatasetConfig #######################
+# class EmbeddingsDay8NewDatasetConfig(EmbeddingsConfig):
+#     def __init__(self):
+#         super().__init__()
 
-        self.INPUT_FOLDERS = None
+#         self.INPUT_FOLDERS = None
        
-        self.SPLIT_DATA = False
-        self.EXPERIMENT_TYPE = 'neuronsDay8_new'
-        self.MARKERS_TO_EXCLUDE = None
-        self.ADD_BATCH_TO_LABEL = True
-        self.ADD_REP_TO_LABEL = True
+#         self.SPLIT_DATA = False
+#         self.EXPERIMENT_TYPE = 'neuronsDay8_new'
+#         self.MARKERS_TO_EXCLUDE = None
+#         self.ADD_BATCH_TO_LABEL = True
+#         self.ADD_REP_TO_LABEL = True
 
 
 
-class EmbeddingsDay8DatasetConfigCombined(EmbeddingsDay8NewDatasetConfig):
-    def __init__(self):
-        super().__init__()
+# class EmbeddingsDay8DatasetConfigCombined(EmbeddingsDay8NewDatasetConfig):
+#     def __init__(self):
+#         super().__init__()
 
-        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
-                        ["batch1"]]
+#         self.SHUFFLE:bool = False
 
-        self.SHUFFLE:bool = False
+#         self.SETS:List[str] = ['testset']
 
-        self.SETS:List[str] = ['testset']
+#         # Conditions to include
+#         self.CONDITIONS:List[str]         = ["Untreated"]
 
-        self.MARKERS:List[str]            =  ["G3BP1", "FUS", "FMRP", "TDP43"]
+# class EmbeddingsDay8DatasetConfigBatch1(EmbeddingsDay8DatasetConfigCombined):
+#     def __init__(self):
+#         super().__init__()
 
-        # Cell lines to include
-        self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "FUSRevertant"]
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
+#                         ["batch1"]]
 
-        # Conditions to include
-        self.CONDITIONS:List[str]         = ["stress", "Untreated"]
+#         self.MARKERS:List[str]            =  [
+#                                                 "FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11",
+#                                                 "HNRNPA1",  "LAMP1", "PEX14", "TOMM20", "TIA1", "Tubulin",
+#                                                 "PSD95", "HNRNPA1", "CLTC", "NONO"
+#                                             ]
 
-
-class NewIndiFUSHeteroVsRevertantSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
-
-        self.CELL_LINES: List[str] = ["FUSHeterozygous", "FUSRevertant"]
-        self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["FUS"]
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "OPTN", "TBK1"]
 
 
-class NewIndiFUSHeteroVsWTSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
 
-        self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
-        self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["FUS"]
+# # class NewIndiTBK1VsWTBatch1Subset(EmbeddingsDay8DatasetConfigBatch1):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["TBK1", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11", "HNRNPA1"]
 
-class NewIndiFUSHomoVsRevertantSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
+# # class NewIndiFUSHeteroVsWTBatch1Subset(EmbeddingsDay8DatasetConfigBatch1):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "LAMP1", "LSM14A", "PEX14", "Calreticulin", "HNRNPA1", "TOMM20"]
 
-        self.CELL_LINES: List[str] = ["FUSHomozygous", "FUSRevertant"]
-        self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["FUS"]
+# # class NewIndiOPTNVsWTBatch1Subset(EmbeddingsDay8DatasetConfigBatch1):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["OPTN", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] =  ["CLTC"]#["FUS", "LAMP1", "TIA1", "NEMO", "Calreticulin", "Tubulin", "PSD95", "HNRNPA1", "CLTC"]
 
-class NewIndiFUSHomoVsWTSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
+# class NewIndiFUSHomoVsWTBatch1Subset(EmbeddingsDay8DatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "PEX14", "SNCA", "LSM14A", "HNRNPA1", "TIA1", "NEMO", "CLTC", "NONO"]
 
-        self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
-        self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["FUS"]
+# class NewIndiTDP43vsWTBatch1Subset(EmbeddingsDay8DatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["TDP43", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "NEMO", "LSM14A", "Calreticulin", "CLTC"]
 
-class NewIndiFUSHeteroVsHomoSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
 
-        self.CELL_LINES: List[str] = ["FUSHeterozygous", "FUSHomozygous"]
-        self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["FUS"]
 
-class NewIndiTDP43vsWTSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
+# class EmbeddingsDay8DatasetConfigBatch2(EmbeddingsDay8DatasetConfigCombined):
+#     def __init__(self):
+#         super().__init__()
 
-        self.CELL_LINES: List[str] = ["TDP43", "WT"]
-        self.CONDITIONS: List[str] = ["Untreated"]
-        self.MARKERS: List[str] = ["TDP43"]
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
+#                         ["batch2"]]
 
-class NewIndiWTStressVsUntreatedSubset(EmbeddingsDay8DatasetConfigCombined):
-    def __init__(self):
-        super().__init__()
+#         self.MARKERS:List[str]            =  [
+#                                                 "FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11",
+#                                                 "HNRNPA1",  "LAMP1", "PEX14", "TOMM20", "TIA1", "Tubulin",
+#                                                 "PSD95", "HNRNPA1", "CLTC", "NONO"
+#                                             ]
 
-        self.CELL_LINES: List[str] = ["WT"]
-        self.CONDITIONS: List[str] = ["stress", "Untreated"]
-        self.MARKERS: List[str] = ["G3BP1", "FMRP"]
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "OPTN", "TBK1"]
+
+
+
+# # class NewIndiTBK1VsWTBatch2Subset(EmbeddingsDay8DatasetConfigBatch2):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["TBK1", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11", "HNRNPA1"]
+
+# # class NewIndiFUSHeteroVsWTBatch2Subset(EmbeddingsDay8DatasetConfigBatch2):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "LAMP1", "LSM14A", "PEX14", "Calreticulin", "HNRNPA1", "TOMM20"]
+
+# # class NewIndiOPTNVsWTBatch2Subset(EmbeddingsDay8DatasetConfigBatch2):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["OPTN", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] =  ["CLTC"]#["FUS", "LAMP1", "TIA1", "NEMO", "Calreticulin", "Tubulin", "PSD95", "HNRNPA1", "CLTC"]
+
+# class NewIndiFUSHomoVsWTBatch2Subset(EmbeddingsDay8DatasetConfigBatch2):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "PEX14", "SNCA", "LSM14A", "HNRNPA1", "TIA1", "NEMO", "CLTC", "NONO"]
+
+# class NewIndiTDP43vsWTBatch2Subset(EmbeddingsDay8DatasetConfigBatch2):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["TDP43", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "NEMO", "LSM14A", "Calreticulin", "CLTC"]
+
+# class EmbeddingsDay8DatasetConfigBatch3(EmbeddingsDay8DatasetConfigCombined):
+#     def __init__(self):
+#         super().__init__()
+
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
+#                         ["batch3"]]
+
+#         self.MARKERS:List[str]            =  [
+#                                                 "FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11",
+#                                                 "HNRNPA1",  "LAMP1", "PEX14", "TOMM20", "TIA1", "Tubulin",
+#                                                 "PSD95", "HNRNPA1", "CLTC", "NONO"
+#                                             ]
+
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "OPTN", "TBK1"]
+
+
+
+# # class NewIndiTBK1VsWTBatch3Subset(EmbeddingsDay8DatasetConfigBatch3):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["TBK1", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11", "HNRNPA1"]
+
+# # class NewIndiFUSHeteroVsWTBatch3Subset(EmbeddingsDay8DatasetConfigBatch3):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "LAMP1", "LSM14A", "PEX14", "Calreticulin", "HNRNPA1", "TOMM20"]
+
+# # class NewIndiOPTNVsWTBatch3Subset(EmbeddingsDay8DatasetConfigBatch3):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["OPTN", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] =  ["CLTC"]#["FUS", "LAMP1", "TIA1", "NEMO", "Calreticulin", "Tubulin", "PSD95", "HNRNPA1", "CLTC"]
+
+# class NewIndiFUSHomoVsWTBatch3Subset(EmbeddingsDay8DatasetConfigBatch3):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "PEX14", "SNCA", "LSM14A", "HNRNPA1", "TIA1", "NEMO", "CLTC", "NONO"]
+
+# class NewIndiTDP43vsWTBatch3Subset(EmbeddingsDay8DatasetConfigBatch3):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["TDP43", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "NEMO", "LSM14A", "Calreticulin", "CLTC"]
+
+# class EmbeddingsDay8DatasetConfigBatch8(EmbeddingsDay8DatasetConfigCombined):
+#     def __init__(self):
+#         super().__init__()
+
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
+#                         ["batch8"]]
+
+#         self.MARKERS:List[str]            =  [
+#                                                 "FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11",
+#                                                 "HNRNPA1",  "LAMP1", "PEX14", "TOMM20", "TIA1", "Tubulin",
+#                                                 "PSD95", "HNRNPA1", "CLTC", "NONO"
+#                                             ]
+
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "OPTN", "TBK1"]
+
+
+
+# # class NewIndiTBK1VsWTBatch8Subset(EmbeddingsDay8DatasetConfigBatch8):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["TBK1", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11", "HNRNPA1"]
+
+# # class NewIndiFUSHeteroVsWTBatch8Subset(EmbeddingsDay8DatasetConfigBatch8):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "LAMP1", "LSM14A", "PEX14", "Calreticulin", "HNRNPA1", "TOMM20"]
+
+# # class NewIndiOPTNVsWTBatch8Subset(EmbeddingsDay8DatasetConfigBatch8):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["OPTN", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] =  ["CLTC"]#["FUS", "LAMP1", "TIA1", "NEMO", "Calreticulin", "Tubulin", "PSD95", "HNRNPA1", "CLTC"]
+
+# class NewIndiFUSHomoVsWTBatch8Subset(EmbeddingsDay8DatasetConfigBatch8):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "PEX14", "SNCA", "LSM14A", "HNRNPA1", "TIA1", "NEMO", "CLTC", "NONO"]
+
+# class NewIndiTDP43vsWTBatch8Subset(EmbeddingsDay8DatasetConfigBatch8):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["TDP43", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "NEMO", "LSM14A", "Calreticulin", "CLTC"]
+
+# class EmbeddingsDay8DatasetConfigBatch9(EmbeddingsDay8DatasetConfigCombined):
+#     def __init__(self):
+#         super().__init__()
+
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
+#                         ["batch9"]]
+
+#         self.MARKERS:List[str]            =  [
+#                                                 "FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11",
+#                                                 "HNRNPA1",  "LAMP1", "PEX14", "TOMM20", "TIA1", "Tubulin",
+#                                                 "PSD95", "HNRNPA1", "CLTC", "NONO"
+#                                             ]
+
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "OPTN", "TBK1"]
+
+
+
+# # class NewIndiTBK1VsWTBatch9Subset(EmbeddingsDay8DatasetConfigBatch9):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["TBK1", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11", "HNRNPA1"]
+
+# # class NewIndiFUSHeteroVsWTBatch9Subset(EmbeddingsDay8DatasetConfigBatch9):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "LAMP1", "LSM14A", "PEX14", "Calreticulin", "HNRNPA1", "TOMM20"]
+
+# # class NewIndiOPTNVsWTBatch9Subset(EmbeddingsDay8DatasetConfigBatch9):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["OPTN", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] =  ["CLTC"]#["FUS", "LAMP1", "TIA1", "NEMO", "Calreticulin", "Tubulin", "PSD95", "HNRNPA1", "CLTC"]
+
+# class NewIndiFUSHomoVsWTBatch9Subset(EmbeddingsDay8DatasetConfigBatch9):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "PEX14", "SNCA", "LSM14A", "HNRNPA1", "TIA1", "NEMO", "CLTC", "NONO"]
+
+# class NewIndiTDP43vsWTBatch9Subset(EmbeddingsDay8DatasetConfigBatch9):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["TDP43", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "NEMO", "LSM14A", "Calreticulin", "CLTC"]
+
+# class EmbeddingsDay8DatasetConfigBatch10(EmbeddingsDay8DatasetConfigCombined):
+#     def __init__(self):
+#         super().__init__()
+
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in
+#                         ["batch10"]]
+
+#         self.MARKERS:List[str]            =  [
+#                                                 "FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11",
+#                                                 "HNRNPA1",  "LAMP1", "PEX14", "TOMM20", "TIA1", "Tubulin",
+#                                                 "PSD95", "HNRNPA1", "CLTC", "NONO"
+#                                             ]
+
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["WT", "TDP43", "FUSHeterozygous", "FUSHomozygous", "OPTN", "TBK1"]
+
+
+
+# # class NewIndiTBK1VsWTBatch10Subset(EmbeddingsDay8DatasetConfigBatch10):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["TBK1", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "NEMO", "LSM14A", "SNCA", "Calreticulin", "DCP1A", "ANXA11", "HNRNPA1"]
+
+# # class NewIndiFUSHeteroVsWTBatch10Subset(EmbeddingsDay8DatasetConfigBatch10):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["FUSHeterozygous", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] = ["FUS", "LAMP1", "LSM14A", "PEX14", "Calreticulin", "HNRNPA1", "TOMM20"]
+
+# # class NewIndiOPTNVsWTBatch10Subset(EmbeddingsDay8DatasetConfigBatch10):
+# #     def __init__(self):
+# #         super().__init__()
+# #         self.CELL_LINES: List[str] = ["OPTN", "WT"]
+# #         self.CONDITIONS: List[str] = ["Untreated"]
+# #         self.MARKERS: List[str] =  ["CLTC"]#["FUS", "LAMP1", "TIA1", "NEMO", "Calreticulin", "Tubulin", "PSD95", "HNRNPA1", "CLTC"]
+
+# class NewIndiFUSHomoVsWTBatch10Subset(EmbeddingsDay8DatasetConfigBatch10):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["FUSHomozygous", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "PEX14", "SNCA", "LSM14A", "HNRNPA1", "TIA1", "NEMO", "CLTC", "NONO"]
+
+# class NewIndiTDP43vsWTBatch10Subset(EmbeddingsDay8DatasetConfigBatch10):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["TDP43", "WT"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
+#         self.MARKERS: List[str] = ["FUS", "LAMP1", "NEMO", "LSM14A", "Calreticulin", "CLTC"]
+
+
+
