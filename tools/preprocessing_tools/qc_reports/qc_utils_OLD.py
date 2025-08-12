@@ -5,6 +5,7 @@ sys.path.insert(1, os.getenv("NOVA_HOME"))
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 import random
 import cv2
 from src.preprocessing.preprocessing_utils import rescale_intensity
@@ -59,7 +60,7 @@ def sample_and_calc_variance(INPUT_DIR, batch, sample_size_per_markers=200, num_
     
     return variance
 
-def validate_files_proc(path, batch_df, bad_files, marker_info, cell_lines_for_disp, check_antibody=True):
+def validate_files_proc(path, batch_df, bad_files, marker_info, cell_lines_for_disp):
     path_split = path.split('/')
     cur_marker = path_split[-1]
     cur_cond = path_split[-2]
@@ -87,29 +88,29 @@ def validate_files_proc(path, batch_df, bad_files, marker_info, cell_lines_for_d
                 bad_files.append(f'{path}, {file} small size ({size/1000} kB)')
         except:
             bad_files.append(f'{path}, {file} cannot read')
-        if check_antibody:
-            good_file = False
-            if cur_marker!='DAPI':
-                for i, antibody in enumerate(cur_antybodies):
-                    if f'panel{cur_panels[i]}' in file and antibody in file and cur_cell_line in file:
-                        good_file = True
-                        break
-            else:
-                for antibody in cur_antybodies:
-                    if antibody in file and cur_cell_line in file:
-                        good_file = True
-                        break
-            if not good_file:
-                    bad_files.append(f'{path}, {file}')
+        good_file = False
+        if cur_marker!='DAPI':
+            for i, antibody in enumerate(cur_antybodies):
+                if f'panel{cur_panels[i]}' in file and antibody in file and cur_cell_line in file:
+                    good_file = True
+                    break
+        else:
+            for antibody in cur_antybodies:
+                if antibody in file and cur_cell_line in file:
+                    good_file = True
+                    break
+        if not good_file:
+                bad_files.append(f'{path}, {file}')
     return bad_files, batch_df
 
-def validate_files_raw(path, batch_df, bad_files, marker_info,cell_lines_for_disp, check_antibody=True):
+def validate_files_raw(path, batch_df, bad_files, marker_info,cell_lines_for_disp):
     path_split = path.split('/')
     cur_marker = path_split[-1]
     cur_cond = path_split[-3]
     cur_cell_line = path_split[-5]
     all_files_of_marker_rep = os.listdir(path)
     cell_line_for_disp = cell_lines_for_disp[f'{cur_cell_line}_{cur_cond}']
+    cur_panel = path_split[-4]
     cur_rep = path_split[-2]
     if cur_marker !='DAPI':
         cur_antybodies = marker_info.loc[cur_marker, 'Antibody']
@@ -122,7 +123,7 @@ def validate_files_raw(path, batch_df, bad_files, marker_info,cell_lines_for_dis
     for file in all_files_of_marker_rep:
         file_ext = os.path.splitext(file)[1]
         if file_ext != '.tiff' and file_ext!='.tif':
-            bad_files.append(f'{path}, {file}, ext is {file_ext}')
+            bad_files.append(f'{path}, {file}')
             continue
         try:
             size = os.path.getsize(os.path.join(path, file))
@@ -132,18 +133,17 @@ def validate_files_raw(path, batch_df, bad_files, marker_info,cell_lines_for_dis
         except:
             bad_files.append(f'{path}, {file} cannot read')
             continue
-        if check_antibody:
-            good_file = False
-            for antibody in cur_antybodies:
-                if antibody in file:
-                    good_file = True
-                    break
-            if not good_file:
-                bad_files.append(f'{path}, {file}')
+        good_file = False
+        for antibody in cur_antybodies:
+            if antibody in file:
+                good_file = True
+                break
+        if not good_file:
+            bad_files.append(f'{path}, {file}')
     return bad_files, batch_df
                  
 def validate_folder_structure(root_dir, folder_structure, missing_paths, bad_files, batch_df,
-                               marker_info, cell_lines_for_disp, proc=False, check_antibody=True):
+                               marker_info, cell_lines_for_disp, proc=False):
     for name, content in folder_structure.items():
         path = os.path.join(root_dir, name)
 
@@ -153,12 +153,12 @@ def validate_folder_structure(root_dir, folder_structure, missing_paths, bad_fil
 
         if isinstance(content, dict):
             validate_folder_structure(path, content, missing_paths, bad_files, batch_df, marker_info, cell_lines_for_disp, 
-                                      proc=proc, check_antibody=check_antibody)
+                                      proc=proc)
         else: # end of recursion of folders, need to check files
             if proc:
-                bad_files, batch_df = validate_files_proc(path, batch_df, bad_files, marker_info, cell_lines_for_disp, check_antibody)
+                bad_files, batch_df = validate_files_proc(path, batch_df, bad_files, marker_info, cell_lines_for_disp)
             else:
-                bad_files, batch_df = validate_files_raw(path, batch_df, bad_files, marker_info, cell_lines_for_disp, check_antibody)
+                bad_files, batch_df = validate_files_raw(path, batch_df, bad_files, marker_info, cell_lines_for_disp)
 
                 
     return missing_paths, bad_files, batch_df   
@@ -316,7 +316,7 @@ def custom_fmt(value):
     return f'/{value:.0f}'
 
 def plot_filtering_heatmap(filtered, extra_index, xlabel='', figsize=(5,5), second=None, vmin=0, vmax=100, 
-                           show_sum=False, fmt=".0f"):
+                           show_sum=False):
     for batch, batch_data in filtered.groupby('batch'):
         p = batch_data.pivot_table(index=['rep', extra_index],
                                     columns='cell_line_cond',
@@ -324,15 +324,9 @@ def plot_filtering_heatmap(filtered, extra_index, xlabel='', figsize=(5,5), seco
         p = p.sort_values(by=[extra_index,'rep'])
 
         fig, ax = plt.subplots(figsize=figsize, dpi=150)
-        annot=True
-        if second is not None:
-            annot = p.apply(lambda col: col.map(lambda x: f"{x:.0f}%"))
-
         hm = sns.heatmap(data=p, ax=ax,
-                            yticklabels=p.index, cmap='RdYlGn',annot=annot,
-                            vmin=vmin, vmax=vmax, cbar=True,
-                            annot_kws={'fontsize': 5, 'ha':'right','color':'black'},
-                            fmt=fmt,
+                            yticklabels=p.index, cmap='RdYlGn',annot=True,
+                            vmin=vmin, vmax=vmax, cbar=True,annot_kws={'fontsize': 5, 'ha':'right'},fmt=".0f",
                             cbar_kws = {'shrink': 0.2,})
         ax.set_yticklabels(ax.get_yticklabels(), fontsize=8)
         ax.xaxis.tick_top()
@@ -348,7 +342,7 @@ def plot_filtering_heatmap(filtered, extra_index, xlabel='', figsize=(5,5), seco
             second_p = second_data.pivot_table(index=['rep', extra_index],
                                     columns='cell_line_cond',
                                     values='index')
-            second_p = second_p.sort_values(by=[extra_index,'rep'])
+            second_p = second_p.sort_values(by=extra_index)
             sns.heatmap(second_p, annot=False,
                          cbar=False, ax=ax2, alpha=0)
             for y, (rep, value) in enumerate(second_p.iterrows()):
@@ -356,24 +350,17 @@ def plot_filtering_heatmap(filtered, extra_index, xlabel='', figsize=(5,5), seco
                     if pd.isna(val):
                         continue
                     if val != p.iloc[y,x]:
-                        ax2.annotate(f' ({val:.0f})', xy=(x+0.5, y+0.46),fontsize=5, c='black', va='center')
+                        ax2.annotate(f' ({val:.0f})', xy=(x+0.5, y+0.46),fontsize=5, c='white', va='center')
 
             # Customize the y-axis of the second heatmap
             ax2.set_yticks([])  # Hide the y-axis ticks
             ax2.set_ylabel('')  # Hide the y-axis label
         plt.show()
         
-        # Two bar plots with sum for each cell line 
         if show_sum:
-            
-            if p.shape[0]>150:
-                figsize_bar_plot = (10,26)
-            else:
-                figsize_bar_plot = (10,16)
-                
             p['Total'] = p.sum(axis=1)
             p.loc['Total'] = p.sum(axis=0)
-            fig, axs = plt.subplots(nrows=2, ncols=1, figsize=figsize_bar_plot, dpi=150, gridspec_kw={'height_ratios': [3, 1]})
+            fig, axs = plt.subplots(ncols=2, figsize= (10,6), dpi=150)
             marker_total = p[['Total']].drop(index='Total')
             marker_total.index = [f"{idx[0]}, {idx[1]}" for idx in marker_total.index]
 
@@ -397,51 +384,21 @@ def plot_filtering_heatmap(filtered, extra_index, xlabel='', figsize=(5,5), seco
                 plt.tight_layout()
             plt.show()
 
-def add_empty_lines(df, batches, line_colors, panels, reps, to_ignore=None, markers=None):
-    has_marker = 'marker' in df.columns
-    use_markers = markers if markers is not None else (df['marker'].unique() if has_marker else [None])
+def add_empty_lines(df, batches, line_colors, panels, reps):
     for batch in batches:
         for cell_line_cond in line_colors.keys():
             for panel in panels.columns:
                 for rep in reps:
-                    for marker in use_markers:
-                        filters = (
-                            (df.batch == batch) &
-                            (df.cell_line_cond == cell_line_cond) &
-                            (df.panel == f'panel{panel}') &
-                            (df.rep == rep)
-                        )
-                        if marker is not None:
-                            filters &= (df['marker'] == marker)
-                        matches = df[filters]
-                        if matches.shape[0] == 0:
-                            # Check if this exact combination should be ignored
-                            should_ignore = False
-                            if to_ignore:
-                                should_ignore = all([
-                                    (k == 'batch' and batch in to_ignore[k]) or
-                                    (k == 'cell_line_cond' and cell_line_cond in to_ignore[k]) or
-                                    (k == 'panel' and f'panel{panel}' in to_ignore[k]) or
-                                    (k == 'rep' and rep in to_ignore[k]) or
-                                    (k == 'marker' and marker is not None and marker in to_ignore[k])
-                                    for k in to_ignore
-                                ])
-                            value = np.nan if should_ignore else 0
-
-                            new_row = {
-                                'batch': batch,
-                                'cell_line_cond': cell_line_cond,
-                                'panel': f'panel{panel}',
-                                'rep': rep,
-                                'index': value
-                            }
-                            if marker is not None:
-                                new_row['marker'] = marker
-                            # new_row_df = pd.DataFrame([new_row])
-                            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    
+                    if df[(df.batch==batch)&
+                        (df.cell_line_cond==cell_line_cond)&
+                        (df.panel==f'panel{panel}')&
+                        (df.rep==rep)].shape[0] ==0:
+                            new_row = {'batch': batch, 'cell_line_cond': cell_line_cond,
+                                    'panel': f'panel{panel}', 'rep':rep, 'index':0}
+                            # Add the new row to the DataFrame
+                            new_row_df = pd.DataFrame([new_row])
+                            df = pd.concat([df, new_row_df], ignore_index=True)
     return df
-
 
 def plot_filtering_table(filtered, extra_index, width=8, height=8):
     p = filtered.pivot_table(index=['batch', 'rep', extra_index],
@@ -541,10 +498,9 @@ def run_validate_folder_structure(root_dir, proc, panels, markers,plot_path, mar
                                     cell_lines_to_cond, reps, cell_lines_for_disp,
                                     expected_dapi_raw,fig_height=8, fig_width=8,
                                     batches=[f'batch{i}' for i in range(3,10)],
-                                    cell_lines_to_reps = None, expected_count=100, check_antibody=True):
+                                    cell_lines_to_reps = None, expected_count=100):
     folder_type = 'processed' if proc else 'raw'
     folder_structure = create_folder_structure(folder_type, markers,cell_lines_to_cond, reps, panels, cell_lines_to_reps)
-
     batch_dfs = []
     if not proc and 'deltaNLS' in root_dir:
         markers.remove('TDP43N')
@@ -560,7 +516,7 @@ def run_validate_folder_structure(root_dir, proc, panels, markers,plot_path, mar
         # Validate the folder structure and track missing paths
         missing_paths, bad_files, batch_df = validate_folder_structure(batch_root_dir, folder_structure, [], [],
                                                                        batch_df,marker_info, 
-                                                                       cell_lines_for_disp, proc=proc,check_antibody=check_antibody)
+                                                                       cell_lines_for_disp, proc=proc)
         if len(missing_paths) == 0:
             print("Folder structure is valid.")
         else:
@@ -571,7 +527,7 @@ def run_validate_folder_structure(root_dir, proc, panels, markers,plot_path, mar
             print('No bad files are found.')
         else:
             print(f'{len(bad_files)} files are bad:')
-            for file in bad_files[:3]:
+            for file in bad_files:
                 print(file)
 
         title = f'{folder_type}_table_{batch}'
@@ -618,7 +574,6 @@ def plot_cell_count(df, order, custom_palette, y, title, norm=False, figsize=(15
             min_y_value = (min(-df.groupby(['batch','rep','cell_line_cond'])[y].std()+df.groupby(['batch','rep','cell_line_cond'])[y].mean()))
 
             for i, (batch_name, batch) in enumerate(df.groupby('batch')):
-                batch = batch.sort_values(by='rep')
                 c = sns.barplot(data=batch, x='rep', hue='cell_line_cond', y=y, hue_order = order, 
                                 ax=axs[i], palette=custom_palette, errorbar='sd', err_kws={'linewidth': 1})
                 c.set_xlabel(batch_name, fontsize=12) 
@@ -1052,7 +1007,7 @@ def plot_count_plot(df, custom_palette, reps, title, batch_min=3, batch_max=9):
     plt.show()
 
 def plot_catplot(df, custom_palette, reps, x, x_title, y='cell_line_cond', y_title='cell line',hue='batch_rep', 
-                 batch_min=3, batch_max=9, height = 12, aspect=1, batches=None):
+                 batch_min=3, batch_max=9, height = 12, aspect=1):
     if np.unique(df.batch)[0]=='Perturbations':
         g = sns.catplot(kind='box', data=df, y='cell_line', x=x,height=12, hue='condition')
         g.set_axis_labels(x_title, 'cell line')
@@ -1060,13 +1015,11 @@ def plot_catplot(df, custom_palette, reps, x, x_title, y='cell_line_cond', y_tit
         plt.show()
     else:
         df.loc[:, 'batch_rep'] = df['batch'] + " " + df['rep']
+
         colors_list = custom_palette
+
         if hue == 'batch_rep':
-            if batches is None:
-                palette = {f'batch{i} {rep}':colors_list[i-batch_min] for i in range(batch_min,batch_max+1) for rep in reps}
-            else:
-                batches = [int(batch.replace('batch','')) for batch in batches]
-                palette = {f'batch{i} {rep}':colors_list[i-1] for i in batches for rep in reps}
+            palette = {f'batch{i} {rep}':colors_list[i-batch_min] for i in range(batch_min,batch_max+1) for rep in reps}
             hue_order=palette.keys()
         else:
             palette=custom_palette
@@ -1076,7 +1029,7 @@ def plot_catplot(df, custom_palette, reps, x, x_title, y='cell_line_cond', y_tit
                         hue_order=hue_order)
         g.set_axis_labels(x_title, y_title)
 
-        if hue == 'batch_rep' and len(reps)<3: # not really working for more than 2 reps currently!!!
+        if hue == 'batch_rep':
             g._legend.remove()
             rep_hatches = {'rep1': '', 'rep2': '//'}  # Use '' for rep1 (solid) and '//' for rep2 (dots)
             for ax in g.axes.flat:
@@ -1096,7 +1049,7 @@ def plot_catplot(df, custom_palette, reps, x, x_title, y='cell_line_cond', y_tit
         plt.show()
 
 
-def plot_hm_of_mean_cell_count_per_tile(df, split_by, rows, columns, value='cells_count_in_valid_tiles_mean', figsize=(12, 8), vmin=1, vmax=4):
+def plot_hm(df, split_by, rows, columns, value='cells_count_in_valid_tiles_mean', figsize=(12, 8), vmin=1, vmax=4):
     
     if len(np.unique(df.batch))==1:
         if split_by is not None:
@@ -1151,29 +1104,33 @@ def plot_hm_of_mean_cell_count_per_tile(df, split_by, rows, columns, value='cell
         splits = np.unique(df[split_by])
         batchs = np.sort(df['batch'].unique())
         for batch in batchs:
+            # Get relevant sub-set of the data
+            df_batch_side_a = df[(df['batch'] == batch) & (df[split_by] == splits[0])]
+            df_batch_side_b = df[(df['batch'] == batch) & (df[split_by] == splits[1])]
+
             fig, axs = plt.subplots(figsize=figsize, ncols=len(splits), sharey=False, sharex=False)
-            if len(splits) == 1:
-                axs = [axs]  # Ensure axs is iterable
-            for i, split_val in enumerate(splits):
-                df_batch = df[(df['batch'] == batch) & (df[split_by] == split_val)]
-                pivot_table = pd.crosstab(df_batch[rows], df_batch[columns],
-                                        values=df_batch[value], aggfunc="mean")
-                ax = axs[i]
-                sns.heatmap(pivot_table, annot=True, cmap="flare", linewidths=1, linecolor='gray',
-                            cbar=False, ax=ax, vmin=vmin, vmax=vmax, annot_kws={"fontsize": 12})
+            a = pd.crosstab(df_batch_side_a[rows], df_batch_side_a[columns], 
+                            values=df_batch_side_a[value], aggfunc="mean")
+            aa = pd.crosstab(df_batch_side_b[rows], df_batch_side_b[columns], 
+                                values=df_batch_side_b[value], aggfunc="mean")
+            
+            # Create a heatmap with a separation line between reps
+            ax1 = sns.heatmap(a, annot=True, cmap="flare", linewidths=1, linecolor='gray', 
+                            cbar=False, ax=axs[0], vmin=vmin, vmax=vmax,annot_kws={"fontsize": 12})
+            ax2 = sns.heatmap(aa, annot=True, cmap="flare", linewidths=1, linecolor='gray', 
+                            cbar=False, ax=axs[1], vmin=vmin, vmax=vmax, annot_kws={"fontsize": 12})
 
-                ax.set_xlabel(str(split_val), color="navy")
-                if i == 0:
-                    ax.set_ylabel(rows.replace("_", " "), color="navy")
-                    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
-                else:
-                    ax.set_ylabel('')
-                    ax.set_yticks([])
-
-                # Add vertical line for visual separation
-                ax.axvline(pivot_table.shape[1], color='black', linewidth=2)
-    
             plt.suptitle(batch  + "\n" + value.replace('_',' '), color="navy")
+            ax1.set_xlabel(splits[0], color="navy")
+            ax2.set_xlabel(splits[1],  color="navy")
+            
+            ax1.set_ylabel(rows.replace("_", " "), color="navy")
+            ax2.set_ylabel('')
+            ax2.set_yticks([])
+            ax1.set_yticklabels(ax1.get_yticklabels(), rotation=0)
+
+            ax1.axvline(a.shape[1], color='black', linewidth=2)
+            ax2.axvline(0, color='black', linewidth=2)
             fig.subplots_adjust(wspace=0)
             fig.tight_layout()
             plt.show()
@@ -1206,46 +1163,46 @@ def plot_hm_combine_batches(df,  batches, reps, rows, columns, vmin=1, vmax=4):
     plt.suptitle('Mean of cells count in valid tiles', fontsize=20, color="navy")
     plt.show()
 
-def show_site_survival_dapi_brenner(df_dapi, batches, line_colors, panels, reps, figsize=(5,5), vmax=100,to_ignore=None):
+def show_site_survival_dapi_brenner(df_dapi, batches, line_colors, panels, reps, figsize=(5,5), vmax=100):
     dapi_filter_by_brenner = df_dapi.groupby(['batch','cell_line_cond','panel','rep']).index.count().reset_index()
-    dapi_filter_by_brenner = add_empty_lines(dapi_filter_by_brenner, batches, line_colors, panels, reps, to_ignore)
+    dapi_filter_by_brenner=add_empty_lines(dapi_filter_by_brenner, batches, line_colors, panels, reps)
     dapi_filter_by_brenner.sort_values(by=['batch','cell_line_cond','panel','rep'], inplace=True)
     dapi_filter_by_brenner.reset_index(inplace=True, drop=True)
-    plot_filtering_heatmap(dapi_filter_by_brenner, extra_index='panel',
-                           xlabel='% site survival Brenner on DAPI', figsize=figsize, 
-                           vmax=vmax)
+    plot_filtering_heatmap(dapi_filter_by_brenner, extra_index='panel',xlabel='% site survival Brenner on DAPI', figsize=figsize, vmax=vmax)
     return dapi_filter_by_brenner
 
-def show_site_survival_dapi_cellpose(df_dapi, batches, dapi_filter_by_brenner, line_colors, panels, reps, figsize=(5,5), to_ignore=None):
+def show_site_survival_dapi_cellpose(df_dapi, batches, dapi_filter_by_brenner, line_colors, panels, reps, figsize=(5,5)):
     dapi_filter_by_cellpose = df_dapi[df_dapi.site_cell_count!=0]
     dapi_filter_by_cellpose = dapi_filter_by_cellpose.groupby(['batch','cell_line_cond','panel','rep']).index.count().reset_index()
-    dapi_filter_by_cellpose=add_empty_lines(dapi_filter_by_cellpose, batches, line_colors, panels, reps,to_ignore=to_ignore)
+    dapi_filter_by_cellpose=add_empty_lines(dapi_filter_by_cellpose, batches, line_colors, panels, reps)
     dapi_filter_by_cellpose.sort_values(by=['batch','cell_line_cond','panel','rep'], inplace=True)
     dapi_filter_by_cellpose.reset_index(inplace=True, drop=True)
     assert(dapi_filter_by_cellpose.drop(columns='index') == dapi_filter_by_brenner.drop(columns='index')).all().all()
     dapi_filter_by_cellpose_per = dapi_filter_by_cellpose.copy()
-    dapi_filter_by_cellpose_per['index'] = round(dapi_filter_by_cellpose_per['index']*100 / np.maximum(dapi_filter_by_brenner['index'],1))
-    plot_filtering_heatmap(dapi_filter_by_cellpose_per, extra_index='panel', xlabel='% Site survival Cellpose', 
-                           second=dapi_filter_by_cellpose, figsize=figsize, fmt="")
+    dapi_filter_by_cellpose_per['index'] = round(dapi_filter_by_cellpose_per['index']*100 / dapi_filter_by_brenner['index'])
+    dapi_filter_by_cellpose_per.fillna(0, inplace=True)
+    plot_filtering_heatmap(dapi_filter_by_cellpose_per, extra_index='panel', xlabel='% Site survival Cellpose', second=dapi_filter_by_cellpose, figsize=figsize)
     return dapi_filter_by_cellpose
 
-def show_site_survival_dapi_tiling(df_dapi, batches, dapi_filter_by_cellpose, line_colors, panels, reps, figsize=(5,5),to_ignore=None):
+def show_site_survival_dapi_tiling(df_dapi, batches, dapi_filter_by_cellpose, line_colors, panels, reps, figsize=(5,5)):
     dapi_filter_by_tiling = df_dapi[(df_dapi.site_cell_count!=0) & (df_dapi.n_valid_tiles!=0)]
     dapi_filter_by_tiling = dapi_filter_by_tiling.groupby(['batch','cell_line_cond','panel','rep']).index.count().reset_index()
-    dapi_filter_by_tiling=add_empty_lines(dapi_filter_by_tiling, batches, line_colors, panels, reps, to_ignore=to_ignore)
+    dapi_filter_by_tiling=add_empty_lines(dapi_filter_by_tiling, batches, line_colors, panels, reps)
     dapi_filter_by_tiling.sort_values(by=['batch','cell_line_cond','panel','rep'], inplace=True)
     dapi_filter_by_tiling.reset_index(inplace=True, drop=True)
     assert(dapi_filter_by_tiling.drop(columns='index') == dapi_filter_by_cellpose.drop(columns='index')).all().all()
     dapi_filter_by_tiling_per = dapi_filter_by_tiling.copy()
-    dapi_filter_by_tiling_per['index'] = round(dapi_filter_by_tiling_per['index']*100 / np.maximum(dapi_filter_by_cellpose['index'],1))
+    dapi_filter_by_tiling_per['index'] = round(dapi_filter_by_tiling_per['index']*100 / dapi_filter_by_cellpose['index'])
+    dapi_filter_by_tiling_per.fillna(0, inplace=True)
     plot_filtering_heatmap(dapi_filter_by_tiling_per, extra_index='panel', xlabel='% Site survival tiling', 
-                       second=dapi_filter_by_tiling, figsize=figsize, fmt="")
+                       second=dapi_filter_by_tiling, figsize=figsize)
     return dapi_filter_by_tiling
 
 def show_site_survival_target_brenner(df_dapi, df_target, dapi_filter_by_tiling, markers, figsize=(6,8) ):
     pass_dapi = df_dapi[(df_dapi.site_cell_count!=0) & (df_dapi.n_valid_tiles!=0)] # take only DAPI's that passed so far (Brenner & Cellpose & tiling)
     passs = pd.concat([pass_dapi,df_target])
     pass_target = pd.DataFrame(columns=['batch','rep','marker','panel']) # create empty df for results
+
     for marker in markers:
         if marker=='DAPI':
             continue
@@ -1266,14 +1223,15 @@ def show_site_survival_target_brenner(df_dapi, df_target, dapi_filter_by_tiling,
     pass_target_per['index'] = round(merge['index_pass']*100 / merge['index_dapi'])
     plot_filtering_heatmap(pass_target_per.drop(columns=['level_0','panel']), extra_index='marker', 
                         xlabel = '% Site survival by Brenner on target channel', second=pass_target,
-                        figsize=figsize, fmt="")
+                        figsize=figsize)
     return
 
 def calc_total_sums(df_target, df_dapi, stats, markers):
     dfs = []
     for marker in markers:
         if marker=='DAPI':
-            merge = df_dapi[['batch','cell_line_cond','rep','site_num','panel'] + stats]
+            cur_dapi = df_dapi[df_dapi.marker==marker]
+            merge = cur_dapi[['batch','cell_line_cond','rep','site_num','panel'] + stats]
         else:
             cur_target = df_target[df_target.marker==marker]
             to_merge_target = cur_target[['batch','cell_line_cond','rep','site_num','panel']]
@@ -1314,62 +1272,3 @@ def show_total_sum_tables(total_sum):
     describe.index.name = 'All batches'
     display(HTML(describe.to_html()))
     return
-
-def show_total_valid_tiles_per_marker_and_batch(total_sum, vmin=None, vmax=None):
-    total_per_batch = total_sum.groupby(['marker','batch']).n_valid_tiles.sum().reset_index()
-    total_per_batch = total_per_batch.pivot(index='marker', columns='batch', values='n_valid_tiles')
-    total_per_batch = total_per_batch.drop(index='DAPI')
-    fig = plt.figure(figsize=(6,8),dpi=100)
-    hm = sns.heatmap(total_per_batch, annot=True, fmt="", cmap='coolwarm_r', vmin=vmin, vmax=vmax)
-    hm.set_yticks([i + 0.5 for i in range(len(total_per_batch.index))])
-    hm.set_yticklabels(total_per_batch.index)
-    hm.set_title('Total Valid Tiles')
-    plt.show()
-
-# from GAL's
-
-def plot_marker_data(total_sum, split_by_cell_line=True):
-    """
-    Plot total valid tiles by batch for DAPI, TUJ1, and other markers.
-
-    Parameters:
-        total_sum (DataFrame): Original DataFrame containing marker data.
-        split_by_cell_line (bool): Whether to plot for each cell_line_cond separately or all together.
-    """
-    if total_sum.empty:
-        print("The total_sum DataFrame is empty. Provide valid data for visualization.")
-        return
-
-    # Define subsets and plotting logic
-    def plot_data(data, title_suffix):
-        for markers, figsize in [(['DAPI', 'TUJ1'], (12, 4)), (None, (12, 8))]:
-            subset = data[data['marker'].isin(markers)] if markers else data[~data['marker'].isin(['DAPI', 'TUJ1'])]
-            if not subset.empty:
-                plt.figure(figsize=figsize)
-                sns.barplot(
-                    data=subset,
-                    y='marker',
-                    x='n_valid_tiles',
-                    hue='batch',
-                    ci=None,
-                    orient='h'
-                )
-                marker_names = ", ".join(subset['marker'].unique()) if markers else "Other Markers"
-                plt.title(f"Total Valid Tiles {title_suffix} ({marker_names})", fontsize=16)
-                # plt.title(f"Total Valid Tiles {title_suffix} ({'DAPI & TUJ1' if markers else 'Other Markers'})", fontsize=16)
-                plt.xlabel('Total Valid Tiles', fontsize=14)
-                plt.ylabel('Marker', fontsize=14)
-                plt.legend(title='Batch', bbox_to_anchor=(1.05, 1), loc='upper left')
-                plt.tight_layout()
-                plt.show()
-
-    # Plot all together or split by cell_line_cond
-    if split_by_cell_line:
-        # Calculate marker_tile_summary
-        marker_tile_summary = total_sum.groupby(['batch', 'marker', 'cell_line_cond'])['n_valid_tiles'].sum().reset_index()
-        for cell_line in marker_tile_summary['cell_line_cond'].unique():
-            plot_data(marker_tile_summary[marker_tile_summary['cell_line_cond'] == cell_line], f"by Batch ({cell_line})")
-    else:
-        # Calculate marker_tile_summary
-        marker_tile_summary = total_sum.groupby(['batch', 'marker'])['n_valid_tiles'].sum().reset_index()
-        plot_data(marker_tile_summary, "by Batch (All Cell Lines)")

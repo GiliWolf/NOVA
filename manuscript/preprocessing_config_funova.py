@@ -8,7 +8,7 @@ class PreprocessingBaseConfigFUNOVA(PreprocessingConfig):
         super().__init__()
 
         self.RAW_FOLDER_ROOT = os.path.join(self.RAW_FOLDER_ROOT, 'FUNOVA', 'ordered')
-        self.PROCESSED_FOLDER_ROOT = os.path.join(self.PROCESSED_FOLDER_ROOT, "FUNOVA", "processed_new")
+        self.PROCESSED_FOLDER_ROOT = os.path.join(self.PROCESSED_FOLDER_ROOT, "FUNOVA", "processed_new_pipeline_no_thrs") #"processed_new_pipeline_with_tile_brenner"
         self.OUTPUTS_FOLDER =  os.path.join(os.getenv("NOVA_LOCAL"), "outputs", "preprocessing", "FUNOVA")
         self.PREPROCESSOR_CLASS_PATH = os.path.join("src", "preprocessing", "preprocessors", "preprocessor_opera", "OperaPreprocessor")        
         self.CELL_LINES = ["C9orf72-HRE-1008566",
@@ -32,20 +32,69 @@ class PreprocessingBaseConfigFUNOVAExp3(PreprocessingBaseConfigFUNOVA):
     def __init__(self):
         super().__init__()
         
-        self.MARKERS_FOCUS_BOUNDRIES_PATH =  os.path.join(os.getenv("NOVA_LOCAL"), 'manuscript', 'markers_focus_boundries', 'markers_focus_boundries_funova_Exp3_25.2.25.csv')
-        self.INPUT_FOLDERS = [os.path.join(self.RAW_FOLDER_ROOT, f"Batch{i}") for i in range(1,3)]
-        self.PROCESSED_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, f"Batch{i}") for i in range(1,3)]
-        self.MARKERS_FOCUS_BOUNDRIES_TILES_PATH = os.path.join(os.getenv("NOVA_LOCAL"), 'manuscript', 'markers_focus_boundries', 'markers_focus_boundries_funova_Exp3_tiles.csv')
-        
+        self.MARKERS_FOCUS_BOUNDRIES_PATH = os.path.join(
+            os.getenv("NOVA_LOCAL"), 
+            'manuscript', 
+            'markers_focus_boundries', 
+            'markers_focus_boundries_funova_Exp3_25.2.25.csv'
+        )
 
+        # for out-of-focus brenner filtering of the TILES
+        #self.MARKERS_FOCUS_BOUNDRIES_TILES_PATH = os.path.join(os.getenv("NOVA_LOCAL"), 'manuscript', 'markers_focus_boundries', 'markers_focus_boundries_funova_Exp3_tiles.csv')
+
+class PreprocessingBaseConfigFUNOVAExp3Batch1(PreprocessingBaseConfigFUNOVAExp3):
+    def __init__(self):
+        super().__init__()
+        
+        self.INPUT_FOLDERS = [os.path.join(self.RAW_FOLDER_ROOT, "Batch1")]
+        self.PROCESSED_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "Batch1")]
+        self.OUTPUTS_FOLDER  = os.path.join(self.OUTPUTS_FOLDER, "Batch1")
+
+
+
+class PreprocessingBaseConfigFUNOVAExp3Batch2(PreprocessingBaseConfigFUNOVAExp3):
+    def __init__(self):
+        super().__init__()
+        self.INPUT_FOLDERS = [os.path.join(self.RAW_FOLDER_ROOT, "Batch2")]
+        self.PROCESSED_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "Batch2")]
+        self.OUTPUTS_FOLDER  = os.path.join(self.OUTPUTS_FOLDER, "Batch2") 
+ 
+
+#---------------------
 class PreprocessingBaseConfigFUNOVAExp4(PreprocessingBaseConfigFUNOVA):
     def __init__(self):
         super().__init__()
         
-        self.MARKERS_FOCUS_BOUNDRIES_PATH =  os.path.join(os.getenv("NOVA_HOME"), 'manuscript', 'markers_focus_boundries', 'markers_focus_boundries_funova_Exp4_25.2.25.csv')
-        self.INPUT_FOLDERS = [os.path.join(self.RAW_FOLDER_ROOT, f"Batch{i}") for i in range(3,5)]
-        self.PROCESSED_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, f"Batch{i}") for i in range(3,5)]
-        self.MARKERS_FOCUS_BOUNDRIES_TILES_PATH = os.path.join(os.getenv("NOVA_HOME"), 'manuscript', 'markers_focus_boundries', 'markers_focus_boundries_funova_Exp4_tiles.csv')
+        self.MARKERS_FOCUS_BOUNDRIES_PATH = os.path.join(
+            os.getenv("NOVA_HOME"), 
+            'manuscript', 
+            'markers_focus_boundries', 
+            'markers_focus_boundries_funova_Exp4_25.2.25.csv'
+        ) 
+        # for out-of-focus brenner filtering of the TILES
+        #  #self.MARKERS_FOCUS_BOUNDRIES_TILES_PATH = os.path.join(os.getenv("NOVA_HOME"), 'manuscript', 'markers_focus_boundries', 'markers_focus_boundries_funova_Exp4_tiles.csv')
+
+class PreprocessingBaseConfigFUNOVAExp4Batch3(PreprocessingBaseConfigFUNOVAExp4):
+    def __init__(self):
+        super().__init__()
+        
+        self.INPUT_FOLDERS = [os.path.join(self.RAW_FOLDER_ROOT, "Batch3")]
+        self.PROCESSED_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "Batch3")]
+        self.OUTPUTS_FOLDER  = os.path.join(self.OUTPUTS_FOLDER, "Batch3")   
+
+
+
+class PreprocessingBaseConfigFUNOVAExp4Batch4(PreprocessingBaseConfigFUNOVAExp4):
+    def __init__(self):
+        super().__init__()
+        
+        self.INPUT_FOLDERS = [os.path.join(self.RAW_FOLDER_ROOT, "Batch4")]
+        self.PROCESSED_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "Batch4")]
+        self.OUTPUTS_FOLDER  = os.path.join(self.OUTPUTS_FOLDER, "Batch4")   
+ 
+
+
+# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 class PreprocessingBaseConfigFUNOVAExp3MinMax(PreprocessingBaseConfigFUNOVAExp3):
     def __init__(self):

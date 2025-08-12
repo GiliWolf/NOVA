@@ -8,7 +8,7 @@
 !/manuscript/markers_focus_boundries/*.csv
 anaconda3/
 logs/
-
+outputs/preprocessing/**/configs_used
 outputs/vit_models/*
 restored_data/
 id_rsa

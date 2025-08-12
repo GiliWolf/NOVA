@@ -33,12 +33,7 @@ class PreprocessingConfig(BaseConfig):
         self.TILE_SHAPE:Tuple[int, int] = (100,100)
         # Maximum allowed nuclei in a tile
         self.MAX_NUM_NUCLEI:int = 5
-        # Threshold for minimal partial area of nuclei contained in tile.
-        # If the ratio exceeds this value, the tile will be added.
-        # float value between 0 and 1
-        self.INCLUDED_AREA_RATIO:float = 0.8
-        # The width of main image frame - to recognize nuceli intersecting with main frame
-        self.FRAME_WIDTH_BUFFER:float = 1
+        
         # Num of workers to use when running the preprocessing in parallel
         self.NUM_WORKERS:int = 6
         
@@ -60,15 +55,6 @@ class PreprocessingConfig(BaseConfig):
         
         # The path to the file holding the focus boundries for each marker
         self.MARKERS_FOCUS_BOUNDRIES_PATH:Union[None,str] = None
-
-        # Threshold for filtering out empty tiles or tiles with dead cells  
-        self.MAX_INTENSITY_THRESHOLD_TARGET:float = 1 #0.2 # Before rescale intenisty
-        self.VARIANCE_THRESHOLD_TARGET:float = 1 # 0.0001 # After rescale intenisty
-        self.MAX_INTENSITY_THRESHOLD_NUCLEI:float = 1 # 0.2 # Before rescale intenisty
-        self.VARIANCE_THRESHOLD_NUCLEI:float = 1 # 0.03 # After rescale intenisty
-        self.MIN_ALIVE_NUCLEI_AREA: int = -1 # 800 # Minimum area of a nuclei to be considered alive (in pixels)
-        self.MIN_MEDIAN_INTENSITY_NUCLEI_BLOB_THRESHOLD = 1.9 # 0.95 # Minimum median intensity of a nuclei blob to be considered dead (between 0 and 1)
-
             
         # Which markers to include
         self.MARKERS:Union[None, List[List]]            = None
@@ -80,17 +66,12 @@ class PreprocessingConfig(BaseConfig):
         self.CONDITIONS:Union[None, List[List]]         = None
         # Reps to include
         self.REPS:Union[None, List[List]]               = None
-        # Panels to include
-        self.PANELS:Union[None, List[List]]             = None
-
         
         # The path to the Preprocessor class (the path to the py file, then / and then the name of the class)
         # ex: os.path.join("src", "preprocessing", "preprocessor_spd", "SPDPreprocessor")
         self.PREPROCESSOR_CLASS_PATH:str = None
-
         
         #######################
         
-
         
         

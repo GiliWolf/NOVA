@@ -5,9 +5,9 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-
-from shapely.geometry import Polygon 
-from shapely import make_valid
+import cellpose
+from cellpose import models
+from shapely.geometry import Polygon
 import skimage.exposure
 
 sys.path.insert(1, os.getenv("NOVA_HOME"))
@@ -89,19 +89,9 @@ def is_image_focused(img:np.ndarray , thresholds:Tuple[float, float]):
     logging.warning(f"Image is blurred. Expected to be in range of ({lower_bound}, {upper_bound}), but got {img_focus_quality}")
     return False
 
-def is_tile_focused(img:np.ndarray , lower_bound:Tuple[float, float]):
-    
-    img_focus_quality = get_image_focus_quality(img)
-    
-    if lower_bound <= img_focus_quality:
-        return True
-    
-    logging.warning(f"Tile is blurred. Expected to be higher than ({lower_bound}), but got {img_focus_quality}")
-    return False
-
 def get_nuclei_segmentations(
     img: np.ndarray, 
-    cellpose_model = None,
+    cellpose_model:models.Cellpose=None,
     diameter: float = 60.0, 
     cellprob_threshold: float = 0.0, 
     flow_threshold: float = 0.4, 
@@ -121,14 +111,13 @@ def get_nuclei_segmentations(
     Returns:
         masks (np.ndarray): The mask of segmented nuclei.
     """
-    import cellpose
-    
+
     # Sharpen the image for easier segmentation
     sharpening_filter = np.array([[-1,-1,-1], [-1,25,-1], [-1,-1,-1]])
     img = cv2.filter2D(img, -1, sharpening_filter)
     
     # Segment the image using the model
-    model = cellpose_model if cellpose_model is not None else cellpose.models.Cellpose(gpu=True, model_type='nuclei')
+    model = cellpose_model if cellpose_model is not None else models.Cellpose(gpu=True, model_type='nuclei')
     masks, flows, _, _ = model.eval(
         img, 
         diameter=diameter, 
@@ -217,17 +206,9 @@ def extract_polygons_from_mask(mask:np.ndarray )->List[Polygon]:
     Returns:
         List[Polygon]: The list of object within the given mask as polygons
     """
-    import cellpose
     polygons = [Polygon(xy_to_tuple(o)) for o in cellpose.utils.outlines_list(mask)]
     
-    ## Validate polygons
-    polygons = [make_valid(p1) if not p1.is_valid else p1 for p1 in polygons]
-    # Filter out shapes which are not polygons (i.e. lines) 
-    polygons = [pol for pol in polygons if pol.geom_type != 'LineString' and pol.geom_type !='MultiLineString']
-    
-    ### Filter n validate polygons also 
     return polygons
-
 def is_contains_whole_nucleus(
     nuclei_polygons: List[Polygon], 
     tile_shape: Tuple[int, int], 
