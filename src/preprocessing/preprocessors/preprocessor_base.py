@@ -565,9 +565,18 @@ class Preprocessor(ABC):
         # Separate between background and foreground using Otsu's method
         otsu_thresh = threshold_otsu(dapi_rescaled)
         dapi_mask = dapi_rescaled > otsu_thresh
+        # CHANGE - print
+        # print("otsu_thresh:", otsu_thresh)
 
         # Detect connected components in the binary mask (0 is background)
         labeled, ncomponents = label(dapi_mask)
+
+        # CHANGE
+        # print("ncomponents:", ncomponents)
+        
+        # CHANGED - KEEP
+        if ncomponents >= self.preprocessing_config.MAX_NUM_NUCLEI_BLOB:
+            return True
         
         for i in range(1, ncomponents + 1): # 0 is the background
             blob_mask = (labeled == i)
@@ -576,10 +585,32 @@ class Preprocessor(ABC):
             blob_variance = dapi_masked.var()
             blob_size = blob_mask.sum()
             blob_median = np.median(dapi_masked)
+
+            # CHANGE - KEEP:
+            # detecet ALIVE NUCLEUS (right size) with low variance and intensity (blurred / about-to-die) - 
+            if blob_size > self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA and \
+                ((blob_variance <= self.preprocessing_config.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median <= self.preprocessing_config.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
+                (blob_variance >= self.preprocessing_config.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median >= self.preprocessing_config.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI)):
+                # print("ALIVE CELL failed thresholds -")
+                # print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
+                return True
+
             
-            # Check for intensity and size thresholds
-            if blob_median >= intensity_threshold or (not __is_blob_touching_edge(blob_mask) and blob_size <= self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA):
+            # CHANGE - KEEP
+            # detect DEAD NUCLEUS
+            #if blob_median >= intensity_threshold or (not __is_blob_touching_edge(blob_mask) and blob_size <= self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA):
+            if blob_median >= intensity_threshold and \
+            blob_size <= self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA and\
+            blob_size >= self.preprocessing_config.MIN_NUCLEI_BLOB_AREA and \
+            (blob_variance >= self.preprocessing_config.MIN_VARIANCE_NUCLEI_BLOB_THRESHOLD or\
+            blob_variance <= self.preprocessing_config.MAX_VARIANCE_NUCLEI_BLOB_THRESHOLD):
+                # print("DEAD CELL failed thresholds -")
+                # print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
                 return  True
+            
+            # CHANGE
+            # print("passed:")
+            # print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
                 
         return False
 
@@ -596,9 +627,9 @@ class Preprocessor(ABC):
             bool: True if the DAPI image channel is empty, False otherwise.
             str: Optional reason for being empty.
         """
-        #  CHANGE
-        #  DISCARDED FOR NOW- first run: don't apply threshold at all 
-        return False, None
+        # #  CHANGE
+        # #  DISCARDED FOR NOW- first run: don't apply threshold at all 
+        # return False, None
 
 
         # ADDED TILE BRENNER - GAL'S CODE
@@ -619,6 +650,7 @@ class Preprocessor(ABC):
 
         return False, None
 
+
     def __is_empty_tile_target(self, target:np.ndarray, target_scaled:np.ndarray, target_name:str)-> Tuple[bool, Union[str, None]]:
         """ Check if the target image channel is empty based on max intensity and variance thresholds.
         Parameters:
@@ -629,10 +661,10 @@ class Preprocessor(ABC):
             bool: True if the target image channel is empty, False otherwise.
             str: Optional reason for being empty."""
 
-        #  CHANGE
-        #  DISCARDED FOR NOW- first run: don't apply threshold at all 
-        #                     later: maybe run only only *non* on-off markers 
-        return False, None
+        # #  CHANGE
+        # #  DISCARDED FOR NOW- first run: don't apply threshold at all 
+        # #                     later: maybe run only only *non* on-off markers 
+        # return False, None
 
         # ADDED TILE BRENNER - GAL'S CODE
         if self.markers_focus_boundries_tiles is not None:
@@ -664,22 +696,24 @@ class Preprocessor(ABC):
         Returns:
             bool: True if the image channel is empty, False otherwise.
             str: Optional reason for being empty."""
-        
 
         image_channel_max_intensity = round(image_channel.max(), 4)
         if image_channel_max_intensity <= max_intensity_threshold:
             return True, f"Invalid max intensity: {image_channel_max_intensity} <= {max_intensity_threshold}"
+
         
         image_channel_rescaled_variance = round(image_channel_rescaled.var(), 4)
         if image_channel_rescaled_variance <= variance_threshold:
             return True, f"Invalid variance: {image_channel_rescaled_variance} <= {variance_threshold}"
-        
+
+
         # ADDED - TILE BRENNER - GAL'S CODE
         if out_of_focus_threshold is not None:
             if not is_tile_focused(image_channel, out_of_focus_threshold):
                 return True, f"out-of-focus tile: lower bound threshold = {out_of_focus_threshold}"
 
         return False, None
+
 
     def __apply_rescale_intensity_to_multi_channel_tile(self, tile: np.ndarray) -> np.ndarray:
         """

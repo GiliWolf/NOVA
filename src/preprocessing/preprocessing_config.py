@@ -36,7 +36,7 @@ class PreprocessingConfig(BaseConfig):
         # Threshold for minimal partial area of nuclei contained in tile.
         # If the ratio exceeds this value, the tile will be added.
         # float value between 0 and 1
-        self.INCLUDED_AREA_RATIO:float = 0.8
+        self.INCLUDED_AREA_RATIO:float = 0.9 # NOVA -0.8
         # The width of main image frame - to recognize nuceli intersecting with main frame
         self.FRAME_WIDTH_BUFFER:float = 1
         # Num of workers to use when running the preprocessing in parallel
@@ -61,14 +61,36 @@ class PreprocessingConfig(BaseConfig):
         # The path to the file holding the focus boundries for each marker
         self.MARKERS_FOCUS_BOUNDRIES_PATH:Union[None,str] = None
 
-        # Threshold for filtering out empty tiles or tiles with dead cells  
-        self.MAX_INTENSITY_THRESHOLD_TARGET:float = 1 #0.2 # Before rescale intenisty
-        self.VARIANCE_THRESHOLD_TARGET:float = 1 # 0.0001 # After rescale intenisty
-        self.MAX_INTENSITY_THRESHOLD_NUCLEI:float = 1 # 0.2 # Before rescale intenisty
-        self.VARIANCE_THRESHOLD_NUCLEI:float = 1 # 0.03 # After rescale intenisty
-        self.MIN_ALIVE_NUCLEI_AREA: int = -1 # 800 # Minimum area of a nuclei to be considered alive (in pixels)
-        self.MIN_MEDIAN_INTENSITY_NUCLEI_BLOB_THRESHOLD = 1.9 # 0.95 # Minimum median intensity of a nuclei blob to be considered dead (between 0 and 1)
+        # Threshold for filtering out empty tiles or tiles with dead cells
+        # TARGET (MARKER)
+        # # Before rescale intenisty  
+        self.MAX_INTENSITY_THRESHOLD_TARGET:float = 0.2 # none: 1 # NOVA: 0.2 
+        # After rescale intenisty
+        self.VARIANCE_THRESHOLD_TARGET:float = 0.003 # none: 1 # NOVA: 0.0001 
 
+        # NUCLEI (DAPI)
+        # Before rescale intenisty
+        self.MAX_INTENSITY_THRESHOLD_NUCLEI:float = 0.2 # none: 1 # NOVA: 0.2 
+        # After rescale intenisty
+        self.VARIANCE_THRESHOLD_NUCLEI:float = 0.02 # none: 1 # NOVA: 0.03 
+
+        # Threshold for fitering ALIVE Nucleus detected in [__is_contains_dead_cells]
+        # Minimum area of a nuclei to be considered alive (in pixels)
+        self.MIN_ALIVE_NUCLEI_AREA: int = 700 # none:-1 #  NOVA: 800 
+        # either below both minimal thresholds
+        self.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.01
+        self.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.25# (0.3)
+        # or above both maximal thresholds
+        self.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.03
+        self.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.6
+
+        # Threshold for fitering DEAD Nucleus detected in [__is_contains_dead_cells]
+        # Minimum median intensity of a nuclei blob to be considered dead (between 0 and 1)
+        self.MIN_NUCLEI_BLOB_AREA:int = 150
+        self.MIN_MEDIAN_INTENSITY_NUCLEI_BLOB_THRESHOLD:float = 0.4 #(0.5) #  none: 1.9 # NOVA: 0.95 
+        self.MAX_VARIANCE_NUCLEI_BLOB_THRESHOLD:float = 0.005
+        self.MIN_VARIANCE_NUCLEI_BLOB_THRESHOLD:float = 0.025 # (0.03)
+        self.MAX_NUM_NUCLEI_BLOB:int = 12 
             
         # Which markers to include
         self.MARKERS:Union[None, List[List]]            = None
