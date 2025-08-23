@@ -36,7 +36,7 @@ class PreprocessingConfig(BaseConfig):
         # Threshold for minimal partial area of nuclei contained in tile.
         # If the ratio exceeds this value, the tile will be added.
         # float value between 0 and 1
-        self.INCLUDED_AREA_RATIO:float = 0.9 # NOVA -0.8
+        self.INCLUDED_AREA_RATIO:float = 0.8 # NOVA -0.8
         # The width of main image frame - to recognize nuceli intersecting with main frame
         self.FRAME_WIDTH_BUFFER:float = 1
         # Num of workers to use when running the preprocessing in parallel
@@ -79,7 +79,7 @@ class PreprocessingConfig(BaseConfig):
         self.MIN_ALIVE_NUCLEI_AREA: int = 700 # none:-1 #  NOVA: 800 
         # either below both minimal thresholds
         self.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.01
-        self.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.25# (0.3)
+        self.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.25 # (0.3)
         # or above both maximal thresholds
         self.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.03
         self.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.6

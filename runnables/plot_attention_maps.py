@@ -26,7 +26,11 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
     config_data:DatasetConfig = load_config_file(config_path_data, "data")
     config_data.OUTPUTS_FOLDER = outputs_folder_path
     config_plot:PlotAttnMapConfig = load_config_file(config_path_plot, "plot")
-    corr_method = "pearsonr" # TODO: decide where to put corr_method
+
+    # TODO: decide where to put corr_method
+    corr_method = "soft_overlap" #options: ["pearsonr", "mutual_info", "ssim", "attn_overlap", "soft_overlap"]
+    features_names = ["precision_like", "recall_like", "f1_like"] # if the score return more than one value, use feature name to distinguish them
+
     # load processed attn maps
     processed_attn_maps, labels, paths = load_embeddings(os.path.join(outputs_folder_path, "attention_maps"), config_data, emb_folder_name = "processed")
     processed_attn_maps, labels, paths = [processed_attn_maps], [labels], [paths] #TODO: fix, needed for settypes
@@ -36,7 +40,6 @@ def load_and_plot_attn_maps(outputs_folder_path:str, config_path_data:str, confi
 
     # load correlation data if needed
     if config_plot.SHOW_CORR_SCORES:
-        #corr_method = ????
         d.load()
         corr_data = d.features
     else:

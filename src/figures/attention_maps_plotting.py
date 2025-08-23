@@ -160,7 +160,9 @@ def __create_attn_map_img(attn_map, input_img, heatmap_colored, config_plot, sup
 
         if corr_data is not None:
             corr_nucleus, corr_marker = corr_data[0], corr_data[1]
-            ax[1].text(0.5, -0.25, f"{corr_method} Correlation (Nucleus): {corr_nucleus:.2f}\n{corr_method} Correlation (Marker): {corr_marker:.2f}",
+            formatted_nucleus = ", ".join(f"{v:.3f}" for v in corr_nucleus)
+            formatted_marker = ", ".join(f"{v:.3f}" for v in corr_marker)
+            ax[1].text(0.5, -0.25, f"{corr_method} Correlation (Nucleus): {formatted_nucleus:.2f}\n{corr_method} Correlation (Marker): {formatted_marker:.2f}",
                     transform=ax[1].transAxes, ha='center', va='center', fontsize=config_plot.PLOT_TITLE_FONTSIZE, color='black')
 
         
@@ -249,7 +251,6 @@ def __create_attn_map_img_test(attn_map, input_img, heatmap_colored, config_plot
     # Create figure with minimal spacing
     fig, ax = plt.subplots(2, 2, figsize=config_plot.FIG_SIZE, 
                           gridspec_kw={'wspace': 0.02, 'hspace': 0.25})
-
     # Extract channels
     nucleus = input_img[..., 2]
     marker = input_img[..., 1]
@@ -265,6 +266,15 @@ def __create_attn_map_img_test(attn_map, input_img, heatmap_colored, config_plot
     ax[0, 0].imshow(marker_rgb)
     ax[0, 0].set_title("Marker (Green)", fontsize=config_plot.PLOT_TITLE_FONTSIZE, pad=5)
     ax[0, 0].set_axis_off()
+    if corr_data is not None:
+        corr_marker = corr_data[1]
+        formatted_marker = ", ".join(f"{v:.3f}" for v in corr_marker)
+        ax[0, 0].text(
+            0.5, -0.05,  # slightly below the axes
+            f"{corr_method} Correlation: \n{formatted_marker}",
+            transform=ax[0, 0].transAxes,
+            ha='center', va='top', fontsize=config_plot.PLOT_TITLE_FONTSIZE, color='black'
+        )
 
     # [0,1] Overlay (Input + Attn)
     ax[0, 1].imshow(input_img)
@@ -294,6 +304,15 @@ def __create_attn_map_img_test(attn_map, input_img, heatmap_colored, config_plot
     ax[1, 0].imshow(nucleus_rgb)
     ax[1, 0].set_title("Nucleus (Blue)", fontsize=config_plot.PLOT_TITLE_FONTSIZE, pad=5)
     ax[1, 0].set_axis_off()
+    if corr_data is not None:
+        corr_nucleus = corr_data[0]
+        formatted_nucleus = ", ".join(f"{v:.3f}" for v in corr_nucleus)
+        ax[1, 0].text(
+            0.5, -0.05,  # slightly below the axes
+            f"{corr_method} Correlation: \n{formatted_nucleus}",
+            transform=ax[1, 0].transAxes,
+            ha='center', va='top', fontsize=config_plot.PLOT_TITLE_FONTSIZE, color='black'
+        )
 
     # [1,1] Heatmap
     ax[1, 1].imshow(cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB))

@@ -1241,7 +1241,23 @@ def show_site_survival_dapi_tiling(df_dapi, batches, dapi_filter_by_cellpose, li
     plot_filtering_heatmap(dapi_filter_by_tiling_per, extra_index='panel', xlabel='% Site survival tiling', 
                        second=dapi_filter_by_tiling, figsize=figsize, fmt="")
     return dapi_filter_by_tiling
+    
+def show_site_survival_by_brenner_on_dapi_tiles(df_dapi, batches, dapi_filter_by_tiling, line_colors, panels, reps, figsize=(5,5)):
+    dapi_filter_by_brenner_tiles = df_dapi[(df_dapi.site_cell_count!=0) & (df_dapi.n_valid_tiles_after_tiles_brenner!=0)]
+    dapi_filter_by_brenner_tiles = dapi_filter_by_brenner_tiles.groupby(['batch','cell_line_cond','panel','rep']).index.count().reset_index()
+    dapi_filter_by_brenner_tiles=add_empty_lines(dapi_filter_by_brenner_tiles, batches, line_colors, panels, reps)
+    dapi_filter_by_brenner_tiles.sort_values(by=['batch','cell_line_cond','panel','rep'], inplace=True)
+    dapi_filter_by_brenner_tiles.reset_index(inplace=True, drop=True)
+    assert(dapi_filter_by_brenner_tiles.drop(columns='index') == dapi_filter_by_tiling.drop(columns='index')).all().all()
+    dapi_filter_by_brenner_tiles_per = dapi_filter_by_brenner_tiles.copy()
+    dapi_filter_by_brenner_tiles_per['index'] = round(dapi_filter_by_brenner_tiles_per['index']*100 / dapi_filter_by_tiling['index'])
+    dapi_filter_by_brenner_tiles_per.fillna(0, inplace=True)
+    plot_filtering_heatmap(dapi_filter_by_brenner_tiles_per, extra_index='panel', xlabel='% Site survival tiling', 
+                       second=dapi_filter_by_brenner_tiles, figsize=figsize)
+    return dapi_filter_by_brenner_tiles
 
+
+# GAL's
 def show_site_survival_target_brenner(df_dapi, df_target, dapi_filter_by_tiling, markers, figsize=(6,8) ):
     pass_dapi = df_dapi[(df_dapi.site_cell_count!=0) & (df_dapi.n_valid_tiles!=0)] # take only DAPI's that passed so far (Brenner & Cellpose & tiling)
     passs = pd.concat([pass_dapi,df_target])
@@ -1268,6 +1284,36 @@ def show_site_survival_target_brenner(df_dapi, df_target, dapi_filter_by_tiling,
                         xlabel = '% Site survival by Brenner on target channel', second=pass_target,
                         figsize=figsize, fmt="")
     return
+
+# GAL's
+def show_site_survival_target_brenner_tiles(df_dapi, df_target, dapi_filter_by_brenner_tiles, markers, figsize=(6,8) ):
+    pass_dapi = df_dapi[(df_dapi.site_cell_count!=0) & (df_dapi.n_valid_tiles_after_tiles_brenner!=0)] # take only DAPI's that passed so far (Brenner & Cellpose & tiling)
+    passs = pd.concat([pass_dapi,df_target])
+    pass_target = pd.DataFrame(columns=['batch','rep','marker','panel']) # create empty df for results
+
+    for marker in markers:
+        if marker=='DAPI':
+            continue
+        # for each marker, find the DAPI sites that passed
+        pass_target_cur = passs[passs.marker.str.contains(f'{marker}|DAPI', regex=True)] 
+        # groupby all identifiers to group DAPI&marker sites, then count rows, later count only rows with count>1 (to ignore DAPI)
+        site_pass = pass_target_cur.groupby(['site_num','batch','cell_line_cond','rep','panel']).index.count().reset_index() # for each site, count how many passes (includeing dapi)
+        marker_pass = site_pass[site_pass['index']>1].groupby(['batch','cell_line_cond','rep','panel'])['index'].count().reset_index() # find how many targets passed and then add them all
+        marker_pass['marker'] = marker # add marker info
+        pass_target = pass_target.merge(marker_pass, how='outer') # save result
+
+    pass_target_per = pass_target.copy() # calc percentages
+    merge = pass_target.merge(dapi_filter_by_brenner_tiles[['batch','cell_line_cond','rep','index','panel']],
+                    on=['batch', 'cell_line_cond', 'panel', 'rep'], suffixes=('_pass', '_dapi'))
+    pass_target_per = pass_target_per.sort_values(by=['batch','cell_line_cond','rep','panel','marker']).reset_index()
+    merge = merge.sort_values(by=['batch','cell_line_cond','rep','panel','marker']).reset_index()
+
+    pass_target_per['index'] = round(merge['index_pass']*100 / merge['index_dapi'])
+    plot_filtering_heatmap(pass_target_per.drop(columns=['level_0','panel']), extra_index='marker', 
+                        xlabel = '% Site survival by Brenner on target channel', second=pass_target,
+                        figsize=figsize)
+    return
+
 
 def calc_total_sums(df_target, df_dapi, stats, markers):
     dfs = []

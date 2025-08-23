@@ -216,7 +216,7 @@ def save_embeddings(embeddings: List[np.ndarray[torch.Tensor]],labels: List[np.n
             logging.info(f'[save_embeddings] Finished {set_type} set, saved in {batch_save_path}')
 
 
-def load_embeddings(model_output_folder:str, config_data:DatasetConfig, sample_fraction:float=1.0, multiplex: bool = False)-> Tuple[np.ndarray[float], np.ndarray[str], np.ndarray[str]]:
+def load_embeddings(model_output_folder:str, config_data:DatasetConfig, emb_folder_name:str = "embeddings", sample_fraction:float=1.0, multiplex: bool = False)-> Tuple[np.ndarray[float], np.ndarray[str], np.ndarray[str]]:
     """
     Load embeddings from the model output folder, filtering and sampling as specified in the config_data.
 
@@ -244,7 +244,7 @@ def load_embeddings(model_output_folder:str, config_data:DatasetConfig, sample_f
     logging.info(f"[load_embeddings] model_output_folder = {model_output_folder}")
 
     batches = get_batches_from_input_folders(input_folders)
-    embeddings_folder = os.path.join(model_output_folder, "embeddings", experiment_type, "multiplexed" if multiplex else "")
+    embeddings_folder = os.path.join(model_output_folder, emb_folder_name, experiment_type, "multiplexed" if multiplex else "")
     embeddings, labels, paths = __load_multiple_batches(batches = batches,embeddings_folder = embeddings_folder,
                                                  config_data=config_data, allow_pickle=multiplex)
     

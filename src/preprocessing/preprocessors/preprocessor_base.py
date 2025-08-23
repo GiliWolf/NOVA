@@ -587,7 +587,10 @@ class Preprocessor(ABC):
             blob_median = np.median(dapi_masked)
 
             # CHANGE - KEEP:
-            # detecet ALIVE NUCLEUS (right size) with low variance and intensity (blurred / about-to-die) - 
+            # detecet ALIVE NUCLEUS (right size) with:
+            #               --> low variance and intensity 
+            #            or --> high variance and intensity 
+            # which indicates blurred / about-to-die / dead cell 
             if blob_size > self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA and \
                 ((blob_variance <= self.preprocessing_config.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median <= self.preprocessing_config.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
                 (blob_variance >= self.preprocessing_config.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median >= self.preprocessing_config.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI)):

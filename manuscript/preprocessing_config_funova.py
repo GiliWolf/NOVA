@@ -8,7 +8,7 @@ class PreprocessingBaseConfigFUNOVA(PreprocessingConfig):
         super().__init__()
 
         self.RAW_FOLDER_ROOT = os.path.join(self.RAW_FOLDER_ROOT, 'FUNOVA', 'ordered')
-        self.PROCESSED_FOLDER_ROOT = os.path.join(self.PROCESSED_FOLDER_ROOT, "FUNOVA", "processed_new_pipeline_NOVA_w_thrs")
+        self.PROCESSED_FOLDER_ROOT = os.path.join(self.PROCESSED_FOLDER_ROOT, "FUNOVA", "processed_new_pipeline_w_thrs_0.8")
         self.OUTPUTS_FOLDER =  os.path.join(os.getenv("NOVA_LOCAL"), "outputs", "preprocessing", "FUNOVA")
         self.PREPROCESSOR_CLASS_PATH = os.path.join("src", "preprocessing", "preprocessors", "preprocessor_opera", "OperaPreprocessor")        
         self.CELL_LINES = ["C9orf72-HRE-1008566",
