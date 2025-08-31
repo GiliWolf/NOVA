@@ -68,9 +68,9 @@ class AnalyzerAttnCorr(Analyzer):
 
         for set_type in data_set_types:
             logging.info(f"[AnalyzerAttnCorr] loading from: {output_folder_path}")
-            features.append(np.load(self._get_save_path(output_folder_path, f"{set_type}_corrs")))
-            labels.append(np.load(self._get_save_path(output_folder_path, f"{set_type}_labels")))
-            paths.append(np.load(self._get_save_path(output_folder_path, f"{set_type}_paths")))
+            features.append(np.load(self._get_save_path(output_folder_path, "corrs", set_type)))
+            labels.append(np.load(self._get_save_path(output_folder_path, "labels", set_type)))
+            paths.append(np.load(self._get_save_path(output_folder_path, "paths", set_type)))
 
         self.features = features
         self.labels = labels
@@ -92,9 +92,9 @@ class AnalyzerAttnCorr(Analyzer):
             data_set_types = ['testset']
         
         for i, set_type in enumerate(data_set_types):
-            np.save(self._get_save_path(output_folder_path, f"{set_type}_corrs"), self.features[i])
-            np.save(self._get_save_path(output_folder_path, f"{set_type}_labels"), self.labels[i])
-            np.save(self._get_save_path(output_folder_path, f"{set_type}_paths"), self.paths[i])
+            np.save(self._get_save_path(output_folder_path, "corrs", set_type), self.features[i])
+            np.save(self._get_save_path(output_folder_path, "labels",set_type), self.labels[i])
+            np.save(self._get_save_path(output_folder_path, "paths", set_type), self.paths[i])
         
         return None
 
@@ -138,9 +138,9 @@ class AnalyzerAttnCorr(Analyzer):
         return saveroot
 
 
-    def _get_save_path(self, output_folder_path:str, file_type:str)->str: #TODO:ask sagy where to save
+    def _get_save_path(self, output_folder_path:str, file_type:str, set_type:str = "testset")->str: #TODO:ask sagy where to save
         
-        savepath = os.path.join(output_folder_path, f"{file_type}.npy")
+        savepath = os.path.join(output_folder_path, f"{set_type}_{self.corr_method}_{file_type}.npy")
         return savepath
 
     

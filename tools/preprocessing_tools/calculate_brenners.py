@@ -1,3 +1,4 @@
+from datetime import date
 from multiprocessing import Pool
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,17 +17,15 @@ from sklearn.decomposition import PCA
 from PIL import Image
 import sys
 import logging
-
-sys.path.insert(1, os.getenv("NOVA_HOME"))
-print(f"NOVA_HOME: {os.getenv('NOVA_HOME')}")
-
+NOVA_HOME = "/home/projects/hornsteinlab/Collaboration/NOVA"
+sys.path.insert(1, NOVA_HOME)
+print(f"NOVA_HOME: {NOVA_HOME}")
+AAT_NOVA_DATA_DIR = "/home/projects/hornsteinlab/Collaboration/Guy_Lior/fuNOVA_Pilot"
 from src.preprocessing.preprocessing_utils import fit_image_shape, get_image_focus_quality, rescale_intensity
 from src.common.utils import init_logging, flat_list_of_lists
 from tools.preprocessing_tools.image_sampling_utils import sample_images_all_markers_all_lines
 
-
-BASE_DIR = os.path.join('/home','labs','hornsteinlab','Collaboration','MOmaps')
-INPUT_DIR = os.path.join(BASE_DIR, 'input', 'images', 'raw', 'SpinningDisk', 'NOVA_d18_neurons_sorted')
+INPUT_DIR = os.path.join(AAT_NOVA_DATA_DIR, 'zstack_collapse_2nd_imaging_sorted')
 calc_per_tile = False # I ran _site_ with this being False! (281123)
 
 def calculate_metrics_for_batch(batch_name, sample_size_per_markers=100, num_markers=36, markers=None):
@@ -86,8 +85,7 @@ def _calc_image_metrics(img_path):
     # Load an tiff image (a site image, 1024x1024)
     img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH) 
     if img is None:
-        path = img_path.replace("/home/labs/hornsteinlab/Collaboration/MOmaps/input/images/raw/SpinningDisk/NOVA_d18_neurons_sorted/","")
-        logging.info(f"{path} is empty!")
+        logging.info(f"{img_path} is empty!")
         return None
     
     # img = img[12:-12,12:-12]
@@ -130,16 +128,13 @@ def get_metrics(tile):
 
 
 def main():
-    # cell_lines = ['WT']
-    # conditions = ['Untreated']#, 'stress']
-    # markers = #['DAPI']#["DAPI"]#['NONO', 'G3BP1']
-    batches = ['batch1', 'batch2']#[os.path.join('240323_day29_neurons_sorted', 'batch1')]#['batch4','batch5','batch6', 'batch9']#['batch7', 'batch8', 'batch3', 'batch4','batch5','batch6', 'batch9']#, 'batch8']#['batch6_16bit_no_downsample']
-    # raw_base_path = '/home/labs/hornsteinlab/Collaboration/MOmaps/input/images/raw/SpinningDisk/'
-    
-    
-    log_file_path = "/home/labs/hornsteinlab/Collaboration/MOmaps/outputs/preprocessing/spd18days/brenner/log280524_all.txt"
-    savepath =      "/home/labs/hornsteinlab/Collaboration/MOmaps/outputs/preprocessing/spd18days/brenner/raw_metrics280524_all.csv"
-    
+
+    batches = ['batch1', 'batch2']
+    folder_path = os.path.join(NOVA_HOME, 'outputs', 'preprocessing', 'AAT-NOVA_pilot')
+    os.makedirs(folder_path, exist_ok=True)
+    log_file_path = os.path.join(folder_path, f"{date.today()}.log")
+    savepath = os.path.join(folder_path, f"raw_metrics_{date.today()}.csv")
+
     init_logging(log_file_path)
     
     logging.info("Starting outlier detection..")
@@ -167,4 +162,4 @@ if __name__ == "__main__":
     
 ###########################################
 
-
+# $NOVA_HOME/runnables/run.sh $NOVA_HOME/tools/preprocessing_tools/calculate_brenners -q short -j calc_brenner -m 20000

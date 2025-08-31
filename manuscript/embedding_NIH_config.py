@@ -19,7 +19,49 @@ class EmbeddingsNIHDatasetConfig(EmbeddingsConfig):
         self.ADD_REP_TO_LABEL = True
         self.SHUFFLE:bool = False
         self.SETS:List[str] = ['testset']
+        self.CONDITIONS:List[str]         = ["stress", "Untreated"]
+
+class EmbeddingsNIHDatasetConfigBatch1(EmbeddingsNIHDatasetConfig):
+    def __init__(self):
+        super().__init__()
         
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
+                        ["batch1"]]
+        
+        self.CELL_LINES:List[str]         = ["WT"]
+        self.MARKERS = ["ANAX11", "Calreticulin", "CD41", "CLTC", "DAPI", "DCP1A", "FMRP", "FUS", "G3BP1", "GM130", "KIF5A", "LAMP1", "MitoTracker", "NCL", "NEMO", "P54", "PEX14", "Phalloidin", "PML", "PSD95", "PURA", "SNCA", "SQSTM1", "TDP43", "TIA1", "TOMM20", "TUJ1"]
+
+class EmbeddingsNIHDatasetConfigBatch1Subset(EmbeddingsNIHDatasetConfigBatch1):
+        def __init__(self):
+            super().__init__()
+
+class EmbeddingsNIHDatasetConfigBatch2(EmbeddingsNIHDatasetConfig):
+    def __init__(self):
+        super().__init__()
+        
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
+                        ["batch2"]]
+
+        self.CELL_LINES:List[str]         = ["WT"]
+        self.MARKERS = ["ANAX11", "Calreticulin", "CD41", "CLTC", "DAPI", "DCP1A", "FMRP", "FUS", "G3BP1", "GM130", "KIF5A", "LAMP1", "MitoTracker", "NCL", "NEMO", "P54", "PEX14", "Phalloidin", "PML", "PSD95", "PURA", "SNCA", "SQSTM1", "TDP43", "TIA1", "TOMM20", "TUJ1"]
+
+class EmbeddingsNIHDatasetConfigBatch2Subset(EmbeddingsNIHDatasetConfigBatch2):
+        def __init__(self):
+            super().__init__()
+
+class EmbeddingsNIHDatasetConfigBatch3(EmbeddingsNIHDatasetConfig):
+    def __init__(self):
+        super().__init__()
+        
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
+                        ["batch3"]]
+        self.CELL_LINES:List[str]         = ["WT"]
+        self.MARKERS = ["ANAX11", "Calreticulin", "CD41", "CLTC", "DAPI", "DCP1A", "FMRP", "FUS", "G3BP1", "GM130", "KIF5A", "LAMP1", "MitoTracker", "NCL", "NEMO", "P54", "PEX14", "Phalloidin", "PML", "PSD95", "PURA", "SNCA", "SQSTM1", "TDP43", "TIA1", "TOMM20", "TUJ1"]
+
+class EmbeddingsNIHDatasetConfigBatch3Subset(EmbeddingsNIHDatasetConfigBatch3):
+        def __init__(self):
+            super().__init__()
+
 
 
 
@@ -35,50 +77,50 @@ class EmbeddingsNIHDatasetConfig(EmbeddingsConfig):
 #         self.MARKERS:List[str]            =  [ "PML", "TOMM20", "PURA", "DCP1A", "TUJ1", "TDP43"] #["G3BP1", "FMRP",mitotracker]
 
 
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All(EmbeddingsNIHDatasetConfig):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All(EmbeddingsNIHDatasetConfig):
+#     def __init__(self):
+#         super().__init__()
        
-        self.EXPERIMENT_TYPE = 'NIH'    
-        self.CELL_LINES = ['WT']
-        self.CONDITIONS = ['stress', 'Untreated'] # vs each other
-        self.MARKERS = ['G3BP1', 'FMRP']
+#         self.EXPERIMENT_TYPE = 'NIH'    
+#         self.CELL_LINES = ['WT']
+#         self.CONDITIONS = ['stress', 'Untreated'] # vs each other
+#         self.MARKERS = ['G3BP1', 'FMRP']
 
 
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch1(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch1(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All):
+#     def __init__(self):
+#         super().__init__()
                 
-        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
-                        ["batch1"]]
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
+#                         ["batch1"]]
 
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch2(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch2(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All):
+#     def __init__(self):
+#         super().__init__()
                 
-        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
-                        ["batch2"]]
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
+#                         ["batch2"]]
 
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch3(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch3(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_All):
+#     def __init__(self):
+#         super().__init__()
                 
-        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
-                        ["batch3"]]
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "NIH", f) for f in
+#                         ["batch3"]]
         
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch1Subset(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch1):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch1Subset(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch1):
+#     def __init__(self):
+#         super().__init__()
                 
 
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch2Subset(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch2):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch2Subset(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch2):
+#     def __init__(self):
+#         super().__init__()
                 
 
-class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch3Subset(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch3):
-    def __init__(self):
-        super().__init__()
+# class newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch3Subset(newNeuronsD8FigureConfig_G3BP1_FMRP_stress_Batch3):
+#     def __init__(self):
+#         super().__init__()
                 
 
 

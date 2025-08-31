@@ -63,7 +63,33 @@ def generate_attn_maps_with_model(paths:list, outputs_folder_path:str, config_pa
         for description, paths in paths_by_type.items():
             temp_output_path = os.path.join("attn_by_paths", "FUS_corr_scores", corr_method, description, model_name)
             batch_size = len(paths)
-            config_data.MARKERS = ["DCP1A", "FUS", "Phalloidin"]
+            config_data.MARKERS = [ 'ANAX11',
+                                    'Calreticulin',
+                                    'CD41',
+                                    'CLTC',
+                                    'DAPI',
+                                    'DCP1A',
+                                    'FMRP',
+                                    'FUS',
+                                    'G3BP1',
+                                    'GM130',
+                                    'KIF5A',
+                                    'LAMP1',
+                                    'MitoTracker',
+                                    'NCL',
+                                    'NEMO',
+                                    'P54',
+                                    'PEX14',
+                                    'Phalloidin',
+                                    'PML',
+                                    'PSD95',
+                                    'PURA',
+                                    'SNCA',
+                                    'SQSTM1',
+                                    'TDP43',
+                                    'TIA1',
+                                    'TOMM20',
+                                    'TUJ1']
             # create dataset
             dataset = DatasetFromPaths(config_data, paths)
             
@@ -77,7 +103,7 @@ def generate_attn_maps_with_model(paths:list, outputs_folder_path:str, config_pa
             d = AnalyzerAttnCorr(config_data, outputs_folder_path, config_corr)
             corr_data = d.calculate(processed_attn_maps, [labels], [paths])
 
-            plot_attn_maps(processed_attn_maps, [labels], [paths], config_data, config_plot, output_folder_path=temp_output_path, num_workers = 1, corr_data =  corr_data,corr_method = corr_method)
+            plot_attn_maps(processed_attn_maps, [labels], [paths], config_data, config_plot, output_folder_path=temp_output_path, num_workers = 2, corr_data =  corr_data,corr_method = corr_method)
 
 
 
@@ -92,20 +118,36 @@ def __generate_attn_maps_with_paths_dataloader(dataset:DatasetNOVA, model:NOVAMo
     return attn_maps, labels, paths
 
 paths_by_type = {
-        "FUS_Hetro": [
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/FUSHeterozygous/Untreated/FUS/rep1_r05c07f87-ch3t1_panelG_FUSHeterozygous_processed.npy", 
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/FUS/rep1_r05c02f158-ch3t1_panelG_WT_processed.npy",
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/FUSHeterozygous/Untreated/FUS/rep2_r06c07f63-ch3t1_panelG_FUSHeterozygous_processed.npy" 
-        ],
-        "WT_DCP1A": [
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/DCP1A/rep1_r01c02f08-ch3t1_panelE_WT_processed.npy",
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/DCP1A/rep1_r01c02f149-ch3t1_panelE_WT_processed.npy",
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/DCP1A/rep1_r01c02f188-ch3t1_panelE_WT_processed.npy"
-        ],
-        "WT_Phalloidin":[
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/Phalloidin/rep1_r07c02f03-ch3t1_panelD_WT_processed.npy",
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/Phalloidin/rep1_r07c02f119-ch3t1_panelD_WT_processed.npy",
-            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/neuronsDay8_new/batch1/WT/Untreated/Phalloidin/rep1_r07c02f145-ch3t1_panelD_WT_processed.npy"
+        "NIH_B1_FUSHetro_UT":
+        [
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/ANAX11/rep1_s14_panelD_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/ANAX11/rep8_s13_panelD_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/Calreticulin/rep1_s12_panelH_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/Calreticulin/rep4_s1_panelH_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/CD41/rep2_s25_panelJ_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/CD41/rep8_s3_panelJ_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/CLTC/rep1_s22_panelB_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/CLTC/rep5_s24_panelB_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/DCP1A/rep1_s12_panelC_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/DCP1A/rep2_s20_panelC_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/FMRP/rep1_s14_panelA_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/FMRP/rep4_s1_panelA_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/FUS/rep1_s17_panelK_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/FUS/rep4_s12_panelK_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/G3BP1/rep1_s18_panelG_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/G3BP1/rep4_s16_panelG_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/GM130/rep1_s9_panelI_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/GM130/rep2_s22_panelI_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/KIF5A/rep3_s18_panelG_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/KIF5A/rep7_s9_panelG_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/LAMP1/rep1_s10_panelH_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/LAMP1/rep8_s12_panelH_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/MitoTracker/rep2_s22_panelK_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/MitoTracker/rep3_s16_panelK_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/NCL/rep1_s22_panelK_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/NCL/rep8_s8_panelK_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/TDP43/rep1_s9_panelJ_FUSHeterozygous_processed.npy",
+            "/home/projects/hornsteinlab/Collaboration/NOVA/input/images/processed/ManuscriptFinalData_80pct/NIH/batch1/FUSHeterozygous/Untreated/TDP43/rep4_s21_panelJ_FUSHeterozygous_processed.npy"
         ]
 
     }

@@ -4,71 +4,269 @@ sys.path.insert(1, os.getenv("NOVA_HOME"))
 
 from src.embeddings.embeddings_config import EmbeddingsConfig
 
+# ### Neurons Day 8 NEW ###
+# class EmbeddingsDay8NewDatasetConfig(EmbeddingsConfig):
+#     def __init__(self):
+#         super().__init__()
 
-################# Alyssa: EmbeddingsAlyssaCoyneDatasetConfig #######################
+#         self.INPUT_FOLDERS = None
+#         self.SPLIT_DATA = False
+#         self.EXPERIMENT_TYPE = 'neuronsDay8_new'
+#         self.ADD_BATCH_TO_LABEL = True
+#         self.ADD_REP_TO_LABEL = True
 
-class EmbeddingsAlyssaCoyneDatasetConfig(EmbeddingsConfig):
+# class EmbeddingsDay8B1DatasetConfig(EmbeddingsDay8NewDatasetConfig):
+#     def __init__(self):
+#         super().__init__()
+
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "neuronsDay8_new", f) for f in 
+#                         ["batch1"]]
+
+
+# # AlyssaCoyne new
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1(EmbeddingsConfig):
+#     def __init__(self):
+#         super().__init__()
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "AlyssaCoyne_new", f) for f in
+#                         ["batch1"]]
+        
+#         self.SPLIT_DATA = False
+#         self.EXPERIMENT_TYPE = 'AlyssaCoyne_new'    
+#         self.ADD_BATCH_TO_LABEL = True
+#         self.ADD_REP_TO_LABEL = True
+
+#         self.CONDITIONS = ["Untreated"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigC9_CS2YNLBatch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["C9-CS2YNL"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigC9_CS7VCZBatch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["C9-CS7VCZ"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigC9_CS8RFTBatch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["C9-CS8RFT"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigCtrl_EDi022Batch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["Ctrl-EDi022"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigCtrl_EDi029Batch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["Ctrl-EDi029"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigCtrl_EDi037Batch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["Ctrl-EDi037"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigSALSNegative_CS0ANKBatch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["SALSNegative-CS0ANK"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigSALSNegative_CS0JPPBatch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["SALSNegative-CS0JPP"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigSALSNegative_CS6ZU8Batch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["SALSNegative-CS6ZU8"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigSALSPositive_CS2FN3Batch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["SALSPositive-CS2FN3"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigSALSPositive_CS4ZCDBatch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["SALSPositive-CS4ZCD"]
+
+# class EmbeddingsAlyssaCoyneNEWDatasetConfigSALSPositive_CS7TN6Batch1Subset(EmbeddingsAlyssaCoyneNEWDatasetConfigBatch1):
+#     def __init__(self):
+#         super().__init__()
+#         self.CELL_LINES: List[str] = ["SALSPositive-CS7TN6"]
+##############################
+
+class EmbeddingsNewdNLSDatasetConfig(EmbeddingsConfig):
     def __init__(self):
         super().__init__()
-        
+
         self.INPUT_FOLDERS = None
+        
         self.SPLIT_DATA = False
-        self.EXPERIMENT_TYPE = 'AlyssaCoyne'    
-        self.MARKERS_TO_EXCLUDE = ['MERGED']
+        self.EXPERIMENT_TYPE = 'dNLS'
         self.ADD_BATCH_TO_LABEL = True
         self.ADD_REP_TO_LABEL = True
+        self.MARKERS_TO_EXCLUDE = None
+        self.CELL_LINES = ["dNLS"]
+        self.CONDITIONS = ["DOX", "Untreated"]
 
         self.SHUFFLE:bool = False
-
         self.SETS:List[str] = ['testset']
 
 
-class EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1(EmbeddingsAlyssaCoyneDatasetConfig):
+class EmbeddingsNewdNLSB1DatasetConfigBatch1(EmbeddingsNewdNLSDatasetConfig):
     def __init__(self):
         super().__init__()
 
-        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "AlyssaCoyne", f) for f in
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in 
                         ["batch1"]]
+
+class EmbeddingsNewdNLSB1DatasetConfigDOXBatch1Subset(EmbeddingsNewdNLSB1DatasetConfigBatch1):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["DOX"]
+
+class EmbeddingsNewdNLSB1DatasetConfigUntreatedBatch1Subset(EmbeddingsNewdNLSB1DatasetConfigBatch1):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["Untreated"]
+
+class EmbeddingsNewdNLSDatasetConfigBatch2(EmbeddingsNewdNLSDatasetConfig):
+    def __init__(self):
+        super().__init__()
+
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in 
+                        ["batch2"]]
+
+class EmbeddingsNewdNLSB1DatasetConfigDOXBatch2Subset(EmbeddingsNewdNLSDatasetConfigBatch2):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["DOX"]
+
+class EmbeddingsNewdNLSB1DatasetConfigUntreatedBatch2Subset(EmbeddingsNewdNLSDatasetConfigBatch2):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["Untreated"]
+
+class EmbeddingsNewdNLSDatasetConfigBatch4(EmbeddingsNewdNLSDatasetConfig):
+    def __init__(self):
+        super().__init__()
+
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in 
+                        ["batch4"]]
+
+class EmbeddingsNewdNLSB1DatasetConfigDOXBatch4Subset(EmbeddingsNewdNLSDatasetConfigBatch4):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["DOX"]
+
+class EmbeddingsNewdNLSB1DatasetConfigUntreatedBatch4Subset(EmbeddingsNewdNLSDatasetConfigBatch4):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["Untreated"]
+
+class EmbeddingsNewdNLSB5DatasetConfigBatch5(EmbeddingsNewdNLSDatasetConfig):
+    def __init__(self):
+        super().__init__()
+
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in 
+                        ["batch5"]]
+
+class EmbeddingsNewdNLSB1DatasetConfigDOXBatch5Subset(EmbeddingsNewdNLSB5DatasetConfigBatch5):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["DOX"]
+
+class EmbeddingsNewdNLSB1DatasetConfigUntreatedBatch5Subset(EmbeddingsNewdNLSB5DatasetConfigBatch5):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["Untreated"]
+
+
+class EmbeddingsNewdNLSB6DatasetConfigBatch6(EmbeddingsNewdNLSDatasetConfig):
+    def __init__(self):
+        super().__init__()
+
+        self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "dNLS", f) for f in 
+                        ["batch6"]]
+
+class EmbeddingsNewdNLSB1DatasetConfigDOXBatch6Subset(EmbeddingsNewdNLSB6DatasetConfigBatch6):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["DOX"]
+
+class EmbeddingsNewdNLSB1DatasetConfigUntreatedBatch6Subset(EmbeddingsNewdNLSB6DatasetConfigBatch6):
+    def __init__(self):
+        super().__init__()
+        self.CONDITIONS = ["Untreated"]
+
+
+################# Alyssa: EmbeddingsAlyssaCoyneDatasetConfig #######################
+
+# class EmbeddingsAlyssaCoyneDatasetConfig(EmbeddingsConfig):
+#     def __init__(self):
+#         super().__init__()
+        
+#         self.INPUT_FOLDERS = None
+#         self.SPLIT_DATA = False
+#         self.EXPERIMENT_TYPE = 'AlyssaCoyne'    
+#         self.MARKERS_TO_EXCLUDE = ['MERGED']
+#         self.ADD_BATCH_TO_LABEL = True
+#         self.ADD_REP_TO_LABEL = True
+
+#         self.SHUFFLE:bool = False
+
+#         self.SETS:List[str] = ['testset']
+
+
+# class EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1(EmbeddingsAlyssaCoyneDatasetConfig):
+#     def __init__(self):
+#         super().__init__()
+
+#         self.INPUT_FOLDERS = [os.path.join(self.PROCESSED_FOLDER_ROOT, "ManuscriptFinalData_80pct", "AlyssaCoyne", f) for f in
+#                         ["batch1"]]
        
 
-        # Cell lines to include
-        self.CELL_LINES:List[str]         = ["c9orf72ALSPatients", "sALSNegativeCytoTDP43", "sALSPositiveCytoTDP43", "Controls"]
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["c9orf72ALSPatients", "sALSNegativeCytoTDP43", "sALSPositiveCytoTDP43", "Controls"]
 
-        # Conditions to include
-        self.CONDITIONS:List[str]         = ["Untreated"]
+#         # Conditions to include
+#         self.CONDITIONS:List[str]         = ["Untreated"]
 
-## SUBSET CONFIGS:
-class AlyssaCoyneC9Batch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
+# ## SUBSET CONFIGS:
+# class AlyssaCoyneC9Batch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
 
-    def __init__(self):
-        super().__init__()
+#     def __init__(self):
+#         super().__init__()
 
-        # Cell lines to include
-        self.CELL_LINES:List[str]         = ["c9orf72ALSPatients"]
+#         # Cell lines to include
+#         self.CELL_LINES:List[str]         = ["c9orf72ALSPatients"]
 
-        # Conditions to include
-        self.CONDITIONS:List[str]         = ["Untreated"]
+#         # Conditions to include
+#         self.CONDITIONS:List[str]         = ["Untreated"]
 
-class AlyssaCoyneNegativeTDP43Batch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
-    def __init__(self):
-        super().__init__()
+# class AlyssaCoyneNegativeTDP43Batch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
+#     def __init__(self):
+#         super().__init__()
 
-        self.CELL_LINES: List[str] = ["sALSNegativeCytoTDP43"]
-        self.CONDITIONS: List[str] = ["Untreated"]
+#         self.CELL_LINES: List[str] = ["sALSNegativeCytoTDP43"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
 
-class AlyssaCoynePositiveTDP43Batch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
-    def __init__(self):
-        super().__init__()
+# class AlyssaCoynePositiveTDP43Batch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
+#     def __init__(self):
+#         super().__init__()
 
-        self.CELL_LINES: List[str] = ["sALSPositiveCytoTDP43"]
-        self.CONDITIONS: List[str] = ["Untreated"]
+#         self.CELL_LINES: List[str] = ["sALSPositiveCytoTDP43"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
 
-class AlyssaCoyneControlsBatch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
-    def __init__(self):
-        super().__init__()
+# class AlyssaCoyneControlsBatch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombinedBatch1):
+#     def __init__(self):
+#         super().__init__()
 
-        self.CELL_LINES: List[str] = ["Controls"]
-        self.CONDITIONS: List[str] = ["Untreated"]
+#         self.CELL_LINES: List[str] = ["Controls"]
+#         self.CONDITIONS: List[str] = ["Untreated"]
 
 # # ################# NEW dNLS: EmbeddingsNewdNLSCombinedDatasetConfig #######################
 
@@ -111,7 +309,7 @@ class AlyssaCoyneControlsBatch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombined
 #         self.CELL_LINES: List[str] = ["dNLS"]
 #         self.CONDITIONS: List[str] = ["DOX", "Untreated"]
 
-# ################# NEW INDI: EmbeddingsDay8CombinedDatasetConfig #######################
+################# NEW INDI: EmbeddingsDay8CombinedDatasetConfig #######################
 # class EmbeddingsDay8NewDatasetConfig(EmbeddingsConfig):
 #     def __init__(self):
 #         super().__init__()
@@ -127,8 +325,7 @@ class AlyssaCoyneControlsBatch1Subset(EmbeddingsAlyssaCoyneDatasetConfigCombined
 # class newNeuronsD8FigureConfig_WT_vs_FUSLines_FUSMarker_All(EmbeddingsDay8NewDatasetConfig):
 #     def __init__(self):
 #         super().__init__()
-         
-#         self.EXPERIMENT_TYPE = 'neuronsDay8_new'    
+           
 #         self.CELL_LINES = ['WT', 'FUSRevertant', 'FUSHeterozygous', 'FUSHomozygous'] # WT vs each one 
 #         self.CONDITIONS = ['Untreated']
 #         self.MARKERS = ['FUS']
