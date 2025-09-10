@@ -20,12 +20,12 @@ class PreprocessingBaseConfigAATNOVA(PreprocessingConfig):
         self.MARKERS = ["DAPI", "Cas3", "FK-2", "SMI32", "pDRP1", "TOMM20", "pCaMKIIa", "pTDP-43", "TDP-43", "ATF6", "pAMPK", "HDGFL2", "pS6", "PAR", "UNC13A", "Calreticulin", "LC3-II", "p62", "CathepsinD"]
 
 
-        # NEED TO ADJUST
-        self.CELLPOSE = {
-            'NUCLEUS_DIAMETER': 70,
-            'CELLPROB_THRESHOLD': 0,
-            'FLOW_THRESHOLD': 0.22
-        } ## Adjusted cellpose params to get dead dead cells
+        # # NEED TO ADJUST
+        # self.CELLPOSE = {
+        #     'NUCLEUS_DIAMETER': 70,
+        #     'CELLPROB_THRESHOLD': 0,
+        #     'FLOW_THRESHOLD': 0.22
+        # } ## Adjusted cellpose params to get dead dead cells
 
         # NEED TO ADJUST
         self.MARKERS_FOCUS_BOUNDRIES_PATH = os.path.join(

@@ -284,7 +284,7 @@ class Preprocessor(ABC):
             return valid_tiles_indexes , nuclei_mask_tiled
         return valid_tiles_indexes
 
-    def _get_valid_site_image(self, path: str) -> Union[np.ndarray , None]:
+    def _get_valid_site_image(self, path: str, ch_idx:int = 0) -> Union[np.ndarray , None]:
         """
         Load and preprocess the image from the given path.
 
@@ -301,10 +301,10 @@ class Preprocessor(ABC):
             logging.warning(f"File {path} is corrupted. Skiping this one.")
             return None
             
-        image = fit_image_shape(image, self.preprocessing_config.EXPECTED_IMAGE_SHAPE)  
+        image = fit_image_shape(image, self.preprocessing_config.EXPECTED_IMAGE_SHAPE) 
         image = rescale_intensity(image,\
-                                    lower_bound=self.preprocessing_config.RESCALE_INTENSITY['LOWER_BOUND'],\
-                                    upper_bound=self.preprocessing_config.RESCALE_INTENSITY['UPPER_BOUND']) 
+                                    lower_bound=self.preprocessing_config.RESCALE_INTENSITY['LOWER_BOUND'][ch_idx],\
+                                    upper_bound=self.preprocessing_config.RESCALE_INTENSITY['UPPER_BOUND'][ch_idx]) 
         
         if self.markers_focus_boundries is not None:
             # Filter out-of-focus images
@@ -368,7 +368,7 @@ class Preprocessor(ABC):
         nucleus_path = images_group[self.__NUCLEUS_MARKER_NAME]
         logging.info(f"[{group_id}] Processing {self.__NUCLEUS_MARKER_NAME}: {nucleus_path}")
         
-        processed_nucleus = self._get_valid_site_image(nucleus_path)
+        processed_nucleus = self._get_valid_site_image(nucleus_path, ch_idx=1)
         if processed_nucleus is None: return 
         
         # Get valid tile indexes for the nucleus image
@@ -396,7 +396,7 @@ class Preprocessor(ABC):
                     logging.warning(f"[{group_id}] No valid markers were found in this panel. Skipping also DAPI.")
                     break
 
-            processed_marker = self._get_valid_site_image(marker_path)
+            processed_marker = self._get_valid_site_image(marker_path, ch_idx= 0)
             if processed_marker is None: continue
             
             # Pair marker and nucleus images
@@ -571,11 +571,10 @@ class Preprocessor(ABC):
         # Detect connected components in the binary mask (0 is background)
         labeled, ncomponents = label(dapi_mask)
 
-        # CHANGE
-        # print("ncomponents:", ncomponents)
-        
+
         # CHANGED - KEEP
         if ncomponents >= self.preprocessing_config.MAX_NUM_NUCLEI_BLOB:
+            print("ncomponents failed:", ncomponents)
             return True
         
         for i in range(1, ncomponents + 1): # 0 is the background
@@ -587,15 +586,17 @@ class Preprocessor(ABC):
             blob_median = np.median(dapi_masked)
 
             # CHANGE - KEEP:
-            # detecet ALIVE NUCLEUS (right size) with:
+            # detecet ALIVE NUCLEUS (right size - above minimal thershold) with:
             #               --> low variance and intensity 
             #            or --> high variance and intensity 
+            #            or --> very high size (noise) (above maximal threshold)
             # which indicates blurred / about-to-die / dead cell 
             if blob_size > self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA and \
                 ((blob_variance <= self.preprocessing_config.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median <= self.preprocessing_config.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
-                (blob_variance >= self.preprocessing_config.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median >= self.preprocessing_config.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI)):
-                # print("ALIVE CELL failed thresholds -")
-                # print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
+                (blob_variance >= self.preprocessing_config.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median >= self.preprocessing_config.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
+                blob_size >= self.preprocessing_config.MAX_ALIVE_NUCLEI_AREA):
+                print("ALIVE CELL failed thresholds -")
+                print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
                 return True
 
             
@@ -607,8 +608,8 @@ class Preprocessor(ABC):
             blob_size >= self.preprocessing_config.MIN_NUCLEI_BLOB_AREA and \
             (blob_variance >= self.preprocessing_config.MIN_VARIANCE_NUCLEI_BLOB_THRESHOLD or\
             blob_variance <= self.preprocessing_config.MAX_VARIANCE_NUCLEI_BLOB_THRESHOLD):
-                # print("DEAD CELL failed thresholds -")
-                # print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
+                print("DEAD CELL failed thresholds -")
+                print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
                 return  True
             
             # CHANGE
@@ -643,7 +644,7 @@ class Preprocessor(ABC):
         
         result, cause = self.__is_empty_tile(dapi, dapi_scaled,\
                                              max_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_THRESHOLD_NUCLEI,\
-                                             variance_threshold=self.preprocessing_config.VARIANCE_THRESHOLD_NUCLEI, \
+                                             lower_bound_variance_threshold=self.preprocessing_config.VARIANCE_THRESHOLD_NUCLEI, \
                                              out_of_focus_threshold=out_of_focus_threshold)
         if result:
             return True, f'[DAPI] {cause}'
@@ -677,7 +678,8 @@ class Preprocessor(ABC):
         
         result, cause = self.__is_empty_tile(target, target_scaled,\
                                              max_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_THRESHOLD_TARGET,\
-                                             variance_threshold=self.preprocessing_config.VARIANCE_THRESHOLD_TARGET, \
+                                             lower_bound_variance_threshold=self.preprocessing_config.VARIANCE_THRESHOLD_TARGET, \
+                                             upper_bound_variance_threshold=self.preprocessing_config.VARIANCE_UPPER_BOUND_THRESHOLD_TARGET, \
                                             out_of_focus_threshold = out_of_focus_threshold)
 
         if cause is not None:
@@ -688,14 +690,17 @@ class Preprocessor(ABC):
     def __is_empty_tile(self, image_channel:np.ndarray, 
                             image_channel_rescaled:np.ndarray, 
                             max_intensity_threshold:float,  
-                            variance_threshold:float,
+                            lower_bound_variance_threshold:float,
+                            upper_bound_variance_threshold:float = None,
                             out_of_focus_threshold:float = None) -> Tuple[bool, Union[str, None]]:
         """ Check if the image channel is empty based on max intensity and variance thresholds.
         Parameters:
             image_channel: 2D numpy array of the image channel.
             image_channel_rescaled: 2D numpy array of the rescaled image channel.
             max_intensity_threshold: float, threshold for maximum intensity.
-            variance_threshold: float, threshold for variance.
+            lower_bound_variance_threshold: float, lower bound threshold for variance.
+            upper_bound_variance_threshold: float (optional), upper bound threshold for variance.
+            out_of_focus_threshold: float (optional), out-of-focus threshold (brenner).
         Returns:
             bool: True if the image channel is empty, False otherwise.
             str: Optional reason for being empty."""
@@ -703,12 +708,14 @@ class Preprocessor(ABC):
         image_channel_max_intensity = round(image_channel.max(), 4)
         if image_channel_max_intensity <= max_intensity_threshold:
             return True, f"Invalid max intensity: {image_channel_max_intensity} <= {max_intensity_threshold}"
-
         
         image_channel_rescaled_variance = round(image_channel_rescaled.var(), 4)
-        if image_channel_rescaled_variance <= variance_threshold:
-            return True, f"Invalid variance: {image_channel_rescaled_variance} <= {variance_threshold}"
-
+        if image_channel_rescaled_variance <= lower_bound_variance_threshold:
+            return True, f"Invalid variance: {image_channel_rescaled_variance} <= {lower_bound_variance_threshold}"
+        
+        if upper_bound_variance_threshold is not None:
+            if image_channel_rescaled_variance >= upper_bound_variance_threshold:
+                return True, f"Invalid variance: {image_channel_rescaled_variance} >= {upper_bound_variance_threshold}"
 
         # ADDED - TILE BRENNER - GAL'S CODE
         if out_of_focus_threshold is not None:
@@ -733,8 +740,8 @@ class Preprocessor(ABC):
 
         for c in range(C):
             result[...,c] = rescale_intensity(tile[...,c],
-                                                lower_bound=self.preprocessing_config.RESCALE_INTENSITY['LOWER_BOUND'],\
-                                                upper_bound=self.preprocessing_config.RESCALE_INTENSITY['UPPER_BOUND'])
+                                                lower_bound=self.preprocessing_config.RESCALE_INTENSITY['LOWER_BOUND'][c],\
+                                                upper_bound=self.preprocessing_config.RESCALE_INTENSITY['UPPER_BOUND'][c])
 
         return result
 
