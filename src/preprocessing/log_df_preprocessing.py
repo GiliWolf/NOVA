@@ -10,7 +10,10 @@ from src.preprocessing import path_utils
 from src.common.log_df import LogDF
 
 class LogDFPreprocessing(LogDF):
+
     def __init__(self, path:str):
+        # TODO: remove
+        path = os.path.join(os.getenv("NOVA_LOCAL"), "logs")
         super().__init__(path, 
                         columns=["filename", "batch", "cell_line", "panel",
                                 "condition", "rep", "marker",
