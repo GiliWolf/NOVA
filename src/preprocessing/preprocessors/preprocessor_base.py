@@ -587,13 +587,16 @@ class Preprocessor(ABC):
 
             # CHANGE - KEEP:
             # detecet ALIVE NUCLEUS (right size - above minimal thershold) with:
-            #               --> low variance and intensity 
-            #            or --> high variance and intensity 
-            #            or --> very high size (noise) (above maximal threshold)
+            #               OLD:
+            #               --> low variance *and* intensity 
+            #            or --> high variance *and* intensity 
+            #               NEW:
+            #               --> high intensity *and* (either low or high variance)
+            #            or --> very high size (=~noise) (above maximal threshold)
             # which indicates blurred / about-to-die / dead cell 
             if blob_size > self.preprocessing_config.MIN_ALIVE_NUCLEI_AREA and \
-                ((blob_variance <= self.preprocessing_config.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median <= self.preprocessing_config.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
-                (blob_variance >= self.preprocessing_config.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI and blob_median >= self.preprocessing_config.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
+                (((blob_variance <= self.preprocessing_config.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI or \
+                blob_variance >= self.preprocessing_config.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI) and blob_median >= self.preprocessing_config.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI) or \
                 blob_size >= self.preprocessing_config.MAX_ALIVE_NUCLEI_AREA):
                 print("ALIVE CELL failed thresholds -")
                 print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
@@ -613,8 +616,8 @@ class Preprocessor(ABC):
                 return  True
             
             # CHANGE
-            # print("passed:")
-            # print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
+            print("passed:")
+            print("blob_size:", blob_size, "blob_median: ", blob_median, "blob_variance:", blob_variance)
                 
         return False
 
@@ -643,7 +646,7 @@ class Preprocessor(ABC):
             out_of_focus_threshold = None
         
         result, cause = self.__is_empty_tile(dapi, dapi_scaled,\
-                                             max_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_THRESHOLD_NUCLEI,\
+                                             lower_bound_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_THRESHOLD_NUCLEI,\
                                              lower_bound_variance_threshold=self.preprocessing_config.VARIANCE_THRESHOLD_NUCLEI, \
                                              out_of_focus_threshold=out_of_focus_threshold)
         if result:
@@ -677,7 +680,8 @@ class Preprocessor(ABC):
                 out_of_focus_threshold = None
         
         result, cause = self.__is_empty_tile(target, target_scaled,\
-                                             max_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_THRESHOLD_TARGET,\
+                                             lower_bound_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_THRESHOLD_TARGET,\
+                                             upper_bound_intensity_threshold=self.preprocessing_config.MAX_INTENSITY_UPPER_BOUND_THRESHOLD_TARGET, \
                                              lower_bound_variance_threshold=self.preprocessing_config.VARIANCE_THRESHOLD_TARGET, \
                                              upper_bound_variance_threshold=self.preprocessing_config.VARIANCE_UPPER_BOUND_THRESHOLD_TARGET, \
                                             out_of_focus_threshold = out_of_focus_threshold)
@@ -689,15 +693,17 @@ class Preprocessor(ABC):
 
     def __is_empty_tile(self, image_channel:np.ndarray, 
                             image_channel_rescaled:np.ndarray, 
-                            max_intensity_threshold:float,  
+                            lower_bound_intensity_threshold:float,  
                             lower_bound_variance_threshold:float,
+                            upper_bound_intensity_threshold:float = None,
                             upper_bound_variance_threshold:float = None,
                             out_of_focus_threshold:float = None) -> Tuple[bool, Union[str, None]]:
         """ Check if the image channel is empty based on max intensity and variance thresholds.
         Parameters:
             image_channel: 2D numpy array of the image channel.
             image_channel_rescaled: 2D numpy array of the rescaled image channel.
-            max_intensity_threshold: float, threshold for maximum intensity.
+            lower_bound_variance_threshold: float, lower bound threshold for maximum intensity.
+            upper_bound_intensity_threshold: float (optional), upper bound threshold for maximum intensity.
             lower_bound_variance_threshold: float, lower bound threshold for variance.
             upper_bound_variance_threshold: float (optional), upper bound threshold for variance.
             out_of_focus_threshold: float (optional), out-of-focus threshold (brenner).
@@ -706,12 +712,17 @@ class Preprocessor(ABC):
             str: Optional reason for being empty."""
 
         image_channel_max_intensity = round(image_channel.max(), 4)
-        if image_channel_max_intensity <= max_intensity_threshold:
-            return True, f"Invalid max intensity: {image_channel_max_intensity} <= {max_intensity_threshold}"
+        if image_channel_max_intensity <= lower_bound_intensity_threshold:
+            return True, f"Invalid max intensity: {image_channel_max_intensity} <= {lower_bound_intensity_threshold}"
+        
+        if upper_bound_intensity_threshold is not None:
+            if image_channel_max_intensity >= upper_bound_intensity_threshold:
+                return True, f"Invalid max intensity: {image_channel_max_intensity} >= {upper_bound_intensity_threshold}"
         
         image_channel_rescaled_variance = round(image_channel_rescaled.var(), 4)
         if image_channel_rescaled_variance <= lower_bound_variance_threshold:
             return True, f"Invalid variance: {image_channel_rescaled_variance} <= {lower_bound_variance_threshold}"
+
         
         if upper_bound_variance_threshold is not None:
             if image_channel_rescaled_variance >= upper_bound_variance_threshold:

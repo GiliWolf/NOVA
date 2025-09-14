@@ -65,16 +65,17 @@ class PreprocessingConfig(BaseConfig):
         # TARGET (MARKER)
         # # Before rescale intenisty  
         self.MAX_INTENSITY_THRESHOLD_TARGET:float =  0 # old funova - 0.2 # none: 0 # NOVA: 0.2 
+        self.MAX_INTENSITY_UPPER_BOUND_THRESHOLD_TARGET:float = 1.1 # NEW THRESHOLD # None:1.1
         # After rescale intenisty - lower bound for variance
-        self.VARIANCE_THRESHOLD_TARGET:float = 0 # old funova - 0.003 # none: 0 # NOVA: 0.0001 
+        self.VARIANCE_THRESHOLD_TARGET:float = 0.001 # old funova - 0.003 # none: 0 # NOVA: 0.0001 
         # New threshold - upper bound for target's variance
-        self.VARIANCE_UPPER_BOUND_THRESHOLD_TARGET:float = 0.07 
+        self.VARIANCE_UPPER_BOUND_THRESHOLD_TARGET:float = 0.135 # None: 1.1
 
         # NUCLEI (DAPI)
         # Before rescale intenisty
         self.MAX_INTENSITY_THRESHOLD_NUCLEI:float = 0.17 # old funova  0.2 # none: 0 # NOVA: 0.2 
         # After rescale intenisty
-        self.VARIANCE_THRESHOLD_NUCLEI:float = 0.025 # old funova - 0.02 # none: 0 # NOVA: 0.03 
+        self.VARIANCE_THRESHOLD_NUCLEI:float = 0.028 # old funova - 0.02 # none: 0 # NOVA: 0.03 
 
         # Threshold for fitering ALIVE Nucleus detected in [__is_contains_dead_cells]
         # detecting blobs by thesholding to signal vs. background
@@ -82,29 +83,32 @@ class PreprocessingConfig(BaseConfig):
         self.MAX_NUM_NUCLEI_BLOB:int = 15 # old funova 12 # None - ~500
 
         # Minimum area of a nuclei to be considered alive (in pixels)
-        self.MIN_ALIVE_NUCLEI_AREA: int = 670 #old funova 700 # none:-1 #  NOVA: 800 
+        self.MIN_ALIVE_NUCLEI_AREA: int = 900 #old funova 700 # none:-1 #  NOVA: 800 
         # NEW THRESHOLDS
+
+        # Thresholds for filtering ALIVE cell
         # maximum area of an alive nuclei (above is probably noise or a smear)
-        self.MAX_ALIVE_NUCLEI_AREA: int = 4000  
+        self.MAX_ALIVE_NUCLEI_AREA: int = 4200  
+        # Or
         # either below both minimal thresholds
-        self.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.005 # old funova 0.01 # None 0.0
+        self.MIN_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.006 # old funova 0.01 # None 0.0
         self.MIN_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.25 # old funova 0.25 # None 0.25
         # or above both maximal thresholds
-        self.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 1.0 # old funova 0.03 # None 1.0
-        self.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.6 # old funova 0.6 # None 1.0
+        self.MAX_VARIANCE_THRESHOLD_ALIVE_NUCLEI: float = 0.023 # 0.028 # old funova 0.03 # None 1.0
+        self.MAX_MEDIAN_INTENSITY_THRESHOLD_ALIVE_NUCLEI: float = 0.97 # 0.875 # old funova 0.6 # None 1.0
 
         # Threshold for fitering DEAD Nucleus detected in [__is_contains_dead_cells]
         # Minimum median intensity of a nuclei blob to be considered dead (between 0 and 1)
-        self.MIN_NUCLEI_BLOB_AREA:int = 150 # minimum size for a blob to be considered as dead cell
+        self.MIN_NUCLEI_BLOB_AREA:int = 350 # minimum size for a blob to be considered as dead cell
         # AND
-        self.MIN_MEDIAN_INTENSITY_NUCLEI_BLOB_THRESHOLD:float =  0.4  # old funova 0.4 #  none: 1.9 # NOVA: 0.95 
+        self.MIN_MEDIAN_INTENSITY_NUCLEI_BLOB_THRESHOLD:float =  0.55  # old funova 0.4 #  none: 1.9 # NOVA: 0.95 
         # AND
         # (
         # below "BOTTOM THRESHOLD"
-        self.MAX_VARIANCE_NUCLEI_BLOB_THRESHOLD:float =  0.005 # old funova 0.005 # None - 0.0
+        self.MAX_VARIANCE_NUCLEI_BLOB_THRESHOLD:float =  0.0065 # old funova 0.005 # None - 0.0
         # or
         # above "UPPER THRESHOLD"
-        self.MIN_VARIANCE_NUCLEI_BLOB_THRESHOLD:float = 0.025# old funova 0.025  # None - 0.0
+        self.MIN_VARIANCE_NUCLEI_BLOB_THRESHOLD:float = 0.0355# old funova 0.025  # None - 0.0
         # )
        
             
